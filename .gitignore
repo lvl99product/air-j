@@ -1,0 +1,17 @@
+# macOS system files
+.DS_Store
+**/.DS_Store
+
+# Development dependencies
+node_modules/
+package-lock.json
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Local environments / IDEs
+.env
+.env.*
+.vscode/
+.idea/

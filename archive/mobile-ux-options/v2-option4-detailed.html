@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>air-J | Option 4 Detail View (v2)</title>
+    <!-- Use exact fonts from app -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Link to Master Styles to inherit branding completely -->
+    <link rel="stylesheet" href="../../src/styles.css">
+
+    <style>
+        /* Presentation Layout Styles */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px;
+            font-family: var(--font-body);
+        }
+
+        .presentation-container {
+            display: flex;
+            gap: 60px;
+            max-width: 1200px;
+            align-items: center;
+        }
+
+        /* Phone Mockup Frame */
+        .phone-frame {
+            width: 375px;
+            height: 750px;
+            background-color: var(--bg-color);
+            border: 12px solid #1a2230;
+            border-radius: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Mockup Notch */
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 28px;
+            background-color: #1a2230;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            z-index: 1000;
+        }
+
+        /* Overrides for Option 4 inside the phone */
+        .mockup-header {
+            padding: 40px 20px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .mockup-header .brand-wrapper {
+            transform: scale(0.9);
+            transform-origin: left;
+        }
+
+        .m-view-tabs {
+            padding: 10px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .m-filter-scroll {
+            display: flex;
+            gap: 10px;
+            padding: 5px 20px 15px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .m-filter-scroll::-webkit-scrollbar { display: none; }
+        
+        .m-filter-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background-color: var(--surface-color);
+            color: var(--text-muted);
+        }
+        .m-filter-chip.active {
+            background-color: rgba(13, 148, 136, 0.15); /* Primary transparent */
+            color: var(--primary);
+            border-color: rgba(13, 148, 136, 0.4);
+        }
+
+        .m-board-area {
+            flex: 1;
+            padding: 0 20px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Floating Action Speed Dial */
+        .fab-cluster {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .mini-fab {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            cursor: pointer;
+        }
+        .mini-fab:hover { color: var(--accent); }
+
+        .main-fab {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px var(--card-glow);
+            cursor: pointer;
+        }
+
+        /* Annotation Lines & Text */
+        .annotations-left, .annotations-right {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            max-width: 300px;
+        }
+
+        .annotation-card {
+            background: rgba(15, 30, 44, 0.8);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            position: relative;
+            backdrop-filter: blur(8px);
+        }
+
+        .annotation-card h4 {
+            font-family: var(--font-heading);
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .annotation-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Connector Lines (Visual) */
+        .connector {
+            position: absolute;
+            height: 1px;
+            background-color: var(--accent);
+            top: 50%;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .annotations-left .connector { left: 100%; width: 60px; }
+        .annotations-right .connector { right: 100%; width: 60px; }
+        
+        /* Custom dot on connector */
+        .connector::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            top: -2.5px;
+        }
+        .annotations-left .connector::after { right: 0; }
+        .annotations-right .connector::after { left: 0; }
+
+        .mockup-header-actions .user-avatar { width: 32px; height: 32px; font-size: 12px; }
+        
+        /* Ensure ambient blobs show up nicely inside phone */
+        .phone-frame .ambient-blobs { position: absolute; }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <div class="presentation-container">
+        
+        <!-- Left Annotations -->
+        <div class="annotations-left">
+            <div class="annotation-card" style="margin-top: 50px;">
+                <h4>1. Simplified App Header</h4>
+                <p>Retains the core branding and user profile. By removing the search bar from the top, we achieve a much cleaner visual hierarchy.</p>
+                <div class="connector"></div>
+            </div>
+
+            <div class="annotation-card" style="margin-top: 20px;">
+                <h4>2. View Switcher</h4>
+                <p>The core segmented control for To-Do, Doing, Done remains prominent at the top. This guarantees users always know what context they are in.</p>
+                <div class="connector"></div>
+            </div>
+
+            <div class="annotation-card" style="margin-top: 10px;">
+                <h4>3. Category Pills</h4>
+                <p>Scrollable horizontal chips placed exactly below the context tabs. Very discoverable, highly native, and doesn't push the list down too far.</p>
+                <div class="connector"></div>
+            </div>
+        </div>
+
+        <!-- Center Phone Mockup -->
+        <div class="phone-frame">
+            <!-- Background from Master Theme -->
+            <div class="ambient-blobs">
+                <div class="blob blob-1"></div>
+                <div class="blob blob-2"></div>
+            </div>
+
+            <!-- Header -->
+            <div class="mockup-header">
+                <div class="brand-wrapper">
+                    <div class="brand-logo">
+                        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                            <defs>
+                                <linearGradient id="header-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--primary)" />
+                                    <stop offset="100%" stop-color="var(--accent)" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M 60,18 C 36,18 20,36 20,60 C 20,84 38,102 60,102 C 78,102 92,88 95,72 C 98,60 92,50 80,50 C 68,50 64,60 64,68 L 64,80 C 64,86 70,90 76,86 C 82,82 86,74 86,68 C 86,48 76,34 60,34 C 47,34 38,43 38,55 C 38,68 48,78 60,78 L 60,40" fill="none" stroke="url(#header-logo-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="50,50 60,40 70,50" fill="none" stroke="url(#header-logo-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="brand-name">air<span>-J</span></span>
+                </div>
+                <div class="mockup-header-actions">
+                    <div class="user-avatar">JO</div>
+                </div>
+            </div>
+
+            <!-- Segmented Control -->
+            <div class="m-view-tabs">
+                <div class="segmented-control" data-active-tab="todo">
+                    <div class="segmented-slider"></div>
+                    <button class="tab-trigger active">
+                        <span>To Do</span>
+                        <span class="badge-count">5</span>
+                    </button>
+                    <button class="tab-trigger">
+                        <span>Doing</span>
+                    </button>
+                    <button class="tab-trigger">
+                        <span>Done</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Chips -->
+            <div class="m-filter-scroll">
+                <div class="m-filter-chip active">All Tasks</div>
+                <div class="m-filter-chip">Development</div>
+                <div class="m-filter-chip">UI/UX Design</div>
+                <div class="m-filter-chip">Marketing</div>
+            </div>
+
+            <!-- Kanban Column Board Area with Sample Tasks -->
+            <div class="m-board-area">
+                
+                <div class="task-card">
+                    <div class="task-card-header">
+                        <div class="task-tags-row">
+                            <span class="tag-badge tag-work" style="background: rgba(45, 212, 191, 0.15); color: var(--accent); border: 1px solid rgba(45, 212, 191, 0.3);">UI/UX DESIGN</span>
+                        </div>
+                        <div class="task-priority">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#EF4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </div>
+                    </div>
+                    <h3 style="font-size: 15px; margin:0; font-family:var(--font-heading);">Figma Mockups for Mobile Views</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin:0;">Create the 4 variant layouts as an HTML presentation for review.</p>
+                </div>
+
+                <div class="task-card">
+                    <div class="task-card-header">
+                        <div class="task-tags-row">
+                            <span class="tag-badge" style="background: rgba(13, 148, 136, 0.15); color: var(--primary); border: 1px solid rgba(13, 148, 136, 0.3);">DEVELOPMENT</span>
+                        </div>
+                        <div class="task-priority">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#F59E0B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                    </div>
+                    <h3 style="font-size: 15px; margin:0; font-family:var(--font-heading);">Implement Drag-and-Drop</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin:0;">Ensure touch events work flawlessly on iOS Safari.</p>
+                </div>
+
+                <div class="task-card">
+                    <div class="task-card-header">
+                        <div class="task-tags-row">
+                            <span class="tag-badge" style="background: rgba(148, 163, 184, 0.15); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.3);">BACKLOG</span>
+                        </div>
+                    </div>
+                    <h3 style="font-size: 15px; margin:0; font-family:var(--font-heading);">Review PR #42</h3>
+                </div>
+            </div>
+
+            <!-- Floating Action Speed Dial -->
+            <div class="fab-cluster">
+                <!-- Mini FAB 1: Search -->
+                <div class="mini-fab" title="Search Tasks">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </div>
+                <!-- Mini FAB 2: Day Review -->
+                <div class="mini-fab" title="Day Review">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+                    </svg>
+                </div>
+                <!-- Main FAB: Add Task / Expand -->
+                <div class="main-fab" title="Add / Expand Menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Annotations -->
+        <div class="annotations-right">
+            <div class="annotation-card" style="margin-top: 250px;">
+                <h4>4. Task Card Elements</h4>
+                <p>Task cards remain untouched, drawing directly from your `styles.css`. The priority icons and tags stand out nicely against the Abyss Black theme.</p>
+                <div class="connector"></div>
+            </div>
+
+            <div class="annotation-card" style="margin-top: 50px;">
+                <h4>5. Floating Action Speed Dial</h4>
+                <p>The "Add Task" button is anchored here. When tapped, it can optionally expand out the "Search" and "Day Review" mini-buttons, completely decluttering the top workspace while keeping vital actions highly accessible for thumbs.</p>
+                <div class="connector"></div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

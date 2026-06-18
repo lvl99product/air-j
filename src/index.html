@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>air-J | Personal Task Manager</title>
+    <meta name="description" content="Maintain your flow and track your day with air-J—a responsive mobile-first task manager with Kanban simplicity, locked to the calm and ambient Deep Ocean Abyss design system.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <!-- Ambient Backdrop Blobs -->
+    <div class="ambient-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <!-- Application Top Navigation Bar -->
+    <header class="app-header">
+        <div class="brand-wrapper">
+            <div class="brand-logo">
+                <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                    <defs>
+                        <linearGradient id="header-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M 60,18 C 36,18 20,36 20,60 C 20,84 38,102 60,102 C 78,102 92,88 95,72 C 98,60 92,50 80,50 C 68,50 64,60 64,68 L 64,80 C 64,86 70,90 76,86 C 82,82 86,74 86,68 C 86,48 76,34 60,34 C 47,34 38,43 38,55 C 38,68 48,78 60,78 L 60,40" fill="none" stroke="url(#header-logo-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="50,50 60,40 70,50" fill="none" stroke="url(#header-logo-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <span class="brand-name">air<span>-J</span></span>
+        </div>
+
+        <div class="mode-toggle-wrapper" id="header-mode-toggle" data-active-mode="kanban">
+            <div class="mode-toggle-slider"></div>
+            <button class="mode-toggle-btn active" data-mode="kanban" title="Switch to Kanban mode">Kanban</button>
+            <button class="mode-toggle-btn" data-mode="scrum" title="Switch to Scrum mode">Scrum</button>
+        </div>
+
+        <div class="header-actions">
+            <div class="profile-dropdown-wrapper" id="profile-dropdown-wrapper">
+                <div class="user-avatar" id="profile-avatar" title="User profile" role="button" aria-haspopup="true" aria-expanded="false">U</div>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <div class="profile-dropdown-header">
+                        <strong>User</strong>
+                        <span>Workspace</span>
+                    </div>
+                    <div class="profile-dropdown-divider"></div>
+                    <button class="profile-dropdown-item" id="theme-toggle" title="Toggle Theme mode">
+                        <span class="item-icon" id="theme-toggle-icon-container">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                            </svg>
+                        </span>
+                        <span class="item-label" id="theme-toggle-label">Dark Theme</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Persistent Sidebar (Desktop View) -->
+        <aside class="sidebar">
+            <!-- Profile Welcome Card -->
+            <div class="profile-card">
+                <div class="user-avatar">U</div>
+                <div class="profile-info">
+                    <span class="profile-name">User</span>
+                    <span class="profile-title">Workspace</span>
+                </div>
+            </div>
+
+            <!-- Dynamics Analytics progress ring card -->
+            <div class="progress-card">
+                <div class="progress-circle-wrapper">
+                    <svg viewBox="0 0 36 36" class="circular-chart">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path id="progress-circle-fill" class="circle-progress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    </svg>
+                    <div class="circle-text">
+                        <span class="percentage-num" id="progress-percentage-label">0%</span>
+                        <span class="percentage-lbl">Done</span>
+                    </div>
+                </div>
+                <div class="progress-details">
+                    <span class="progress-stat">Todo: <strong id="stats-todo-count">0</strong></span>
+                    <span class="progress-stat">Doing: <strong id="stats-doing-count">0</strong></span>
+                    <span class="progress-stat">Done: <strong id="stats-done-count">0</strong></span>
+                </div>
+            </div>
+
+            <!-- Project Category filters -->
+            <div class="sidebar-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span class="sidebar-title" style="margin-bottom: 0;">Project Categories</span>
+                    <button class="edit-categories-btn" id="sidebar-manage-cat-btn" title="Manage Categories">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        Manage
+                    </button>
+                </div>
+                <nav class="filter-menu" id="category-filter-list">
+                    <!-- Dynamic categories injected here -->
+                </nav>
+            </div>
+
+            <!-- Priority Filters -->
+            <div class="sidebar-section">
+                <span class="sidebar-title">Priority</span>
+                <nav class="filter-menu" id="priority-filter-list">
+                    <button class="filter-item active" data-priority-filter="all">
+                        <span class="filter-label">All Priorities</span>
+                    </button>
+                    <button class="filter-item" data-priority-filter="High">
+                        <span class="filter-label">🔴 High Priority</span>
+                    </button>
+                    <button class="filter-item" data-priority-filter="Medium">
+                        <span class="filter-label">🟡 Medium Priority</span>
+                    </button>
+                    <button class="filter-item" data-priority-filter="Low">
+                        <span class="filter-label">🔵 Low Priority</span>
+                    </button>
+                </nav>
+            </div>
+            <!-- Sprint History (Scrum Mode only) -->
+            <div class="sidebar-section scrum-only">
+                <span class="sidebar-title">Sprint History</span>
+                <nav class="filter-menu" id="sprint-history-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 4px;">
+                    <!-- Past sprints injected here -->
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Flow -->
+        <main class="workspace-container">
+            <!-- Active overview banner -->
+            <section class="dashboard-overview">
+                <div class="dashboard-welcome">
+                    <span class="dashboard-date" id="current-date-string">Monday, Jun 1</span>
+                    <h1 id="welcome-message-header">Manage your flow, User</h1>
+                    <p id="dashboard-subtitle-string">You have 0 active tasks in progress today.</p>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="btn-primary" id="header-add-task-btn" title="Create Task button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Create Task
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sprint Header Widget (Scrum Mode only) -->
+            <section class="sprint-header-widget" id="sprint-header-widget">
+                <div class="sprint-info">
+                    <span class="sprint-status-badge">Active</span>
+                    <span class="sprint-widget-name" id="sprint-widget-name" style="display: none;">Sprint 1</span>
+                </div>
+                <div class="sprint-progress-section">
+                    <div class="sprint-progress-meta">
+                        <span id="sprint-progress-ratio" style="font-size: 11px; font-weight: 700; color: var(--text-main); white-space: nowrap;">0/0 Completed</span>
+                        <span class="sprint-days-badge">⏳ <span id="sprint-days-remaining">0</span> days left</span>
+                    </div>
+                    <div class="sprint-progress-bar-track">
+                        <div class="sprint-progress-bar-fill" id="sprint-progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Collapsible Search Bar (hidden by default on mobile) -->
+            <section class="workspace-toolbar" id="mobile-search-panel">
+                <div class="search-box-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" id="global-search-input" placeholder="Search tasks by title or details..." aria-label="Search tasks">
+                    <button class="search-clear-btn" id="search-clear-btn" aria-label="Clear search">✕</button>
+                </div>
+            </section>
+            <!-- Mobile Segmented Column Tab Control -->
+            <section class="mobile-view-tabs">
+                <div class="segmented-control" data-active-tab="todo" id="column-segmented-control">
+                    <div class="segmented-slider"></div>
+                    <button class="tab-trigger active" data-tab-target="todo" id="tab-todo-btn">
+                        <span>To Do</span>
+                        <span class="tab-badge" id="badge-todo-count">0</span>
+                    </button>
+                    <button class="tab-trigger" data-tab-target="doing" id="tab-doing-btn">
+                        <span>Doing</span>
+                        <span class="tab-badge" id="badge-doing-count">0</span>
+                    </button>
+                    <button class="tab-trigger" data-tab-target="done" id="tab-done-btn">
+                        <span>Done</span>
+                        <span class="tab-badge" id="badge-done-count">0</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Mobile Category Filter Pills -->
+            <div class="mobile-category-filters" id="mobile-category-filters">
+                <!-- Populated by JS -->
+            </div>
+
+
+            <!-- Responsive Kanban Board Grid -->
+            <section class="kanban-board">
+                <!-- Scrum Backlog Panel (First Column in Scrum Mode) -->
+                <div class="scrum-backlog-panel scrum-only" id="backlog-column">
+                    <div class="backlog-header">
+                        <div class="backlog-title-area">
+                            <span class="backlog-dot"></span>
+                            <h2 class="backlog-title">Backlog</h2>
+                            <span class="backlog-count" id="backlog-count">0</span>
+                        </div>
+                        <div class="backlog-actions">
+                            <button class="column-add-btn" id="backlog-add-task-btn" title="Add task to Backlog">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Quick Add Row (visible on mobile in Scrum mode) -->
+                    <div class="quick-add-backlog-row" id="quick-add-backlog-row">
+                        <input type="text" id="quick-add-backlog-input" placeholder="Quick add task..." maxlength="100" autocomplete="off">
+                        <button type="button" class="btn-primary" id="quick-add-backlog-btn" style="padding: 0 14px; flex-shrink: 0;">Add</button>
+                    </div>
+                    <div class="backlog-task-list" id="backlog-cards-list">
+                        <!-- Backlog task items injected here -->
+                    </div>
+                </div>
+
+                <!-- Sprint Planning Placeholder (shown when no active sprint) -->
+                <div class="sprint-planning-placeholder scrum-only" id="sprint-planning-placeholder">
+                    <div class="planning-placeholder-card">
+                        <div class="placeholder-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <h3>No Active Sprint</h3>
+                        <p>Configure a sprint cycle and commit tasks from your backlog to start tracking progress.</p>
+                        <button class="btn-primary" id="plan-first-sprint-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Plan Sprint
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Next Sprint Column (shown during planning) -->
+                <div class="kanban-column column-next-sprint scrum-only" id="column-next-sprint">
+                    <div class="column-header">
+                        <div class="column-title-area">
+                            <span class="column-dot" style="background-color: var(--accent);"></span>
+                            <h2 class="column-title">Next Sprint</h2>
+                            <span class="column-count" id="next-sprint-count">0</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="btn-primary" id="start-sprint-lock-btn" style="padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                Start
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-cards-list" id="next-sprint-cards-list">
+                        <!-- Cards injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- COLUMN 1: TO DO -->
+                <div class="kanban-column column-todo active-tab" data-status="todo" id="column-todo">
+                    <div class="column-header">
+                        <div class="column-title-area">
+                            <span class="column-dot"></span>
+                            <h2 class="column-title">To Do</h2>
+                            <span class="column-count" id="todo-count">0</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="column-add-btn" data-column-add="todo" title="Add task to To Do list">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-cards-list" id="todo-cards-list">
+                        <!-- Cards injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: DOING -->
+                <div class="kanban-column column-doing" data-status="doing" id="column-doing">
+                    <div class="column-header">
+                        <div class="column-title-area">
+                            <span class="column-dot"></span>
+                            <h2 class="column-title">Doing</h2>
+                            <span class="column-count" id="doing-count">0</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="column-add-btn" data-column-add="doing" title="Add task to Doing list">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-cards-list" id="doing-cards-list">
+                        <!-- Cards injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- COLUMN 3: DONE -->
+                <div class="kanban-column column-done" data-status="done" id="column-done">
+                    <div class="column-header">
+                        <div class="column-title-area">
+                            <span class="column-dot"></span>
+                            <h2 class="column-title">Done</h2>
+                            <span class="column-count" id="done-count">0</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="column-add-btn" data-column-add="done" title="Add task to Done list">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-cards-list" id="done-cards-list">
+                        <!-- Cards injected dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sprint Footer Actions & Collapsed Backlog (Scrum Mode only) -->
+            <div id="collapsed-backlog-container" style="width: 100%; max-width: 800px; margin: 0 auto; padding: 0 16px;"></div>
+            <div class="sprint-footer-actions">
+                <button class="btn-secondary" id="sprint-end-btn" title="End current sprint early">End Sprint</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sprint Cart Banner (mobile Scrum, no active sprint) -->
+    <div class="sprint-cart-banner" id="sprint-cart-banner" aria-hidden="true">
+        <div class="cart-banner-info">
+            <h4 class="cart-banner-title">Next Sprint</h4>
+            <p class="cart-banner-subtitle"><span id="cart-task-count">0</span> Tasks Staged</p>
+        </div>
+        <button class="btn-primary" id="sprint-cart-review-btn" style="padding: 10px 18px; font-size: 13px; white-space: nowrap;">Review &amp; Start</button>
+    </div>
+
+    <!-- Sprint Cart Sheet (slides up from bottom) -->
+    <div class="sprint-cart-sheet" id="sprint-cart-sheet">
+        <div class="drag-handle"></div>
+        <div class="review-sheet-header">
+            <div class="review-sheet-title-area">
+                <h3>Sprint Plan</h3>
+                <span class="review-sheet-date">Review staged tasks</span>
+            </div>
+            <button class="sheet-close-btn" id="sprint-cart-close-btn" aria-label="Close sprint cart">✕</button>
+        </div>
+        <div class="review-sheet-body" style="padding-bottom: 0;">
+            <!-- Staged tasks list -->
+            <div class="review-task-list" id="cart-sheet-staged-list" style="margin-bottom: 20px;">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Duration Picker -->
+            <div class="cart-duration-section">
+                <p class="cart-duration-label">Sprint Duration</p>
+                <div class="cart-duration-picker" id="cart-duration-picker">
+                    <button type="button" class="cart-duration-btn selected" data-cart-weeks="1">
+                        <strong>1 Week</strong>
+                        <span>7 days</span>
+                    </button>
+                    <button type="button" class="cart-duration-btn" data-cart-weeks="2">
+                        <strong>2 Weeks</strong>
+                        <span>14 days</span>
+                    </button>
+                    <button type="button" class="cart-duration-btn" data-cart-weeks="3">
+                        <strong>3 Weeks</strong>
+                        <span>21 days</span>
+                    </button>
+                    <button type="button" class="cart-duration-btn" data-cart-weeks="4">
+                        <strong>4 Weeks</strong>
+                        <span>28 days</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="cart-sheet-footer">
+            <button class="btn-primary" id="sprint-cart-start-btn" style="width: 100%; padding: 14px;">Start Sprint</button>
+        </div>
+    </div>
+
+    <!-- Floating Action Speed Dial Cluster -->
+    <div class="fab-cluster">
+        <button class="mini-fab" id="mobile-search-toggle-btn" aria-label="Search Tasks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </button>
+        <button class="mini-fab" id="mobile-review-toggle-btn" aria-label="Day Review">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+        </button>
+        <button class="floating-fab" id="global-add-task-fab" title="Create Task">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Responsive Dialog Overlay: Slides up on mobile, scales centered on desktop -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal-card">
+            <!-- Drag handle visually shown on mobile views -->
+            <div class="drag-handle" id="modal-drag-handle"></div>
+            
+            <div class="modal-header">
+                <h3 id="modal-action-title">Create Task</h3>
+                <button class="sheet-close-btn" id="modal-close-btn" aria-label="Close dialog">✕</button>
+            </div>
+            
+            <div class="modal-body">
+                <form class="task-form" id="task-creation-form" autocomplete="off">
+                    <input type="hidden" id="edit-task-id" value="">
+                    
+                    <div class="form-group">
+                        <label for="form-task-title">Task Title</label>
+                        <input type="text" id="form-task-title" placeholder="What needs to be done?" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="form-task-desc">Description / Notes</label>
+                        <textarea id="form-task-desc" rows="3" placeholder="Add further context or details..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="form-label-row" style="display: flex; justify-content: space-between; align-items: center; height: 16px;">
+                                <label for="form-task-category">Category</label>
+                                <button type="button" class="edit-categories-btn" id="form-manage-cat-btn" title="Edit Categories" style="padding: 0; font-size: 11px;">Edit</button>
+                            </div>
+                            <select id="form-task-category">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label-row" style="display: flex; align-items: center; height: 16px;">
+                                <label for="form-task-priority">Priority</label>
+                            </div>
+                            <select id="form-task-priority">
+                                <option value="Low">🔵 Low</option>
+                                <option value="Medium" selected>🟡 Medium</option>
+                                <option value="High">🔴 High</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="form-task-status">Flow Status</label>
+                            <select id="form-task-status">
+                                <option value="todo">To Do</option>
+                                <option value="doing">Doing</option>
+                                <option value="done">Done</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="form-task-due">Due Date</label>
+                            <input type="date" id="form-task-due">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="form-cancel-btn">Cancel</button>
+                        <button type="submit" class="btn-primary" id="form-submit-btn">Save Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sprint Review Bottom Sheet Backdrop -->
+    <div class="review-sheet-backdrop" id="sprint-review-backdrop"></div>
+
+    <!-- Sprint Review Bottom Sheet Panel -->
+    <div class="sprint-review-sheet" id="sprint-review-sheet">
+        <div class="drag-handle"></div>
+        <div class="review-sheet-header">
+            <div class="review-sheet-title-area">
+                <h3 id="sprint-review-title">Sprint Review</h3>
+                <span class="review-sheet-date" id="sprint-review-subtitle">Sprint Summary</span>
+            </div>
+            <button class="sheet-close-btn" id="sprint-review-close-btn" aria-label="Close sprint review">✕</button>
+        </div>
+
+        <div class="review-sheet-body" style="padding-bottom: 24px;">
+            <!-- Section: Completed Tasks -->
+            <div class="sprint-review-section">
+                <div class="review-section-header">
+                    <div class="review-section-icon review-icon-done" style="background: rgba(16, 185, 129, 0.1); color: var(--accent);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <span class="review-section-label">Completed Tasks</span>
+                    <span class="review-section-count" id="sprint-review-completed-count">0</span>
+                </div>
+                <div class="review-task-list" id="sprint-review-completed-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Section: Incomplete Tasks -->
+            <div class="sprint-review-section">
+                <div class="review-section-header">
+                    <div class="review-section-icon review-icon-high" style="background: rgba(239, 68, 68, 0.1); color: #EF4444;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </div>
+                    <span class="review-section-label">Incomplete Tasks</span>
+                    <span class="review-section-count" id="sprint-review-incomplete-count">0</span>
+                </div>
+                <div class="review-task-list" id="sprint-review-incomplete-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 30px; display: flex; justify-content: flex-end;">
+                <button class="btn-primary" id="sprint-review-finish-btn" style="padding: 10px 24px;">Finish Review</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Review Bottom Sheet Backdrop -->
+    <div class="review-sheet-backdrop" id="review-sheet-backdrop"></div>
+
+    <!-- Day Review Bottom Sheet Panel -->
+    <div class="review-bottom-sheet" id="review-bottom-sheet">
+        <div class="drag-handle"></div>
+        <div class="review-sheet-header">
+            <div class="review-sheet-title-area">
+                <h3 id="review-sheet-title">Day Review</h3>
+                <span class="review-sheet-date" id="review-sheet-date"></span>
+            </div>
+            <button class="sheet-close-btn" id="review-sheet-close-btn" aria-label="Close day review">✕</button>
+        </div>
+
+        <div class="review-sheet-body">
+
+            <!-- Section: In Progress -->
+            <div class="review-section">
+                <div class="review-section-header">
+                    <div class="review-section-icon review-icon-doing">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <span class="review-section-label">In Progress</span>
+                    <span class="review-section-count" id="review-doing-count">0</span>
+                </div>
+                <div class="review-task-list" id="review-in-progress-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Section: Due Soon (within 3 days) -->
+            <div class="review-section">
+                <div class="review-section-header">
+                    <div class="review-section-icon review-icon-due">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <span class="review-section-label">Due Soon <em>(next 3 days)</em></span>
+                    <span class="review-section-count" id="review-due-count">0</span>
+                </div>
+                <div class="review-task-list" id="review-due-soon-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Section: High Priority -->
+            <div class="review-section">
+                <div class="review-section-header">
+                    <div class="review-section-icon review-icon-high">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <span class="review-section-label">High Priority</span>
+                    <span class="review-section-count" id="review-high-count">0</span>
+                </div>
+                <div class="review-task-list" id="review-high-priority-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Sprint Planning Modal -->
+    <div class="modal-overlay" id="sprint-planning-modal">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3>Plan New Sprint</h3>
+                <button class="sheet-close-btn" id="sprint-modal-close-btn" aria-label="Close dialog">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top: 10px;">
+                <form class="task-form" id="sprint-planning-form" autocomplete="off">
+                    <div class="form-group">
+                        <label style="margin-bottom: 12px; display: block;">Sprint Duration</label>
+                        <div class="sprint-duration-selector" id="sprint-duration-selector" style="display: flex; gap: 8px; justify-content: space-between;">
+                            <button type="button" class="sprint-duration-option selected" data-weeks="1" style="flex: 1; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                <strong>1 Week</strong>
+                                <span style="font-size: 10px; opacity: 0.7;">7 days cycle</span>
+                            </button>
+                            <button type="button" class="sprint-duration-option" data-weeks="2" style="flex: 1; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                <strong>2 Weeks</strong>
+                                <span style="font-size: 10px; opacity: 0.7;">14 days cycle</span>
+                            </button>
+                            <button type="button" class="sprint-duration-option" data-weeks="3" style="flex: 1; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                <strong>3 Weeks</strong>
+                                <span style="font-size: 10px; opacity: 0.7;">21 days cycle</span>
+                            </button>
+                            <button type="button" class="sprint-duration-option" data-weeks="4" style="flex: 1; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                <strong>4 Weeks</strong>
+                                <span style="font-size: 10px; opacity: 0.7;">28 days cycle</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="margin-top: 24px;">
+                        <button type="button" class="btn-secondary" id="sprint-cancel-btn">Cancel</button>
+                        <button type="submit" class="btn-primary" id="sprint-submit-btn">Plan Sprint</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Manager Modal -->
+    <div class="modal-overlay category-manager-modal" id="category-manager-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Manage Categories</h3>
+                <button class="sheet-close-btn" id="cat-modal-close-btn" aria-label="Close dialog">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top: 10px;">
+                <div class="category-list-container" id="category-manager-list">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <form class="add-category-form" id="add-category-form" autocomplete="off">
+                    <h4>Create New Category</h4>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <input type="text" id="new-cat-name" placeholder="Category name..." required maxlength="20">
+                    </div>
+                    <div class="color-swatch-picker" id="new-cat-color-picker">
+                        <div class="color-swatch selected" data-color="#3B82F6" style="background-color: #3B82F6;"></div>
+                        <div class="color-swatch" data-color="#10B981" style="background-color: #10B981;"></div>
+                        <div class="color-swatch" data-color="#8B5CF6" style="background-color: #8B5CF6;"></div>
+                        <div class="color-swatch" data-color="#F59E0B" style="background-color: #F59E0B;"></div>
+                        <div class="color-swatch" data-color="#EF4444" style="background-color: #EF4444;"></div>
+                        <div class="color-swatch" data-color="#06B6D4" style="background-color: #06B6D4;"></div>
+                        <div class="color-swatch" data-color="#EC4899" style="background-color: #EC4899;"></div>
+                    </div>
+                    <div class="add-cat-btn-row">
+                        <button type="submit" class="btn-primary" style="padding: 8px 16px; font-size: 13px;">Add Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Toast Feedback -->
+    <div class="toast" id="app-toast">
+        <span class="toast-dot"></span>
+        <span id="toast-message-text">Task saved to flow</span>
+    </div>
+
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
