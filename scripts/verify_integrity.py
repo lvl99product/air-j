@@ -30,7 +30,8 @@ def verify_integrity():
     print("       AIR-J INTEGRITY & STATIC TEST SUITE        ")
     print("==================================================")
     
-    workspace = ".."
+    # Resolve workspace dynamically relative to this script (one level up from scripts/)
+    workspace = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     errors = 0
     warnings = 0
 

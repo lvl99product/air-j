@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>air-J | Design Timeline & Evolution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080E1A;
+            --surface: #0F1829;
+            --surface-2: #162035;
+            --border: rgba(255,255,255,0.07);
+            --primary: #6366F1;
+            --accent: #2DD4BF;
+            --accent-2: #F59E0B;
+            --accent-3: #EC4899;
+            --text: #F1F5F9;
+            --muted: #64748B;
+            --muted-2: #94A3B8;
+            --success: #10B981;
+            --font-head: 'Outfit', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --radius: 16px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── HERO ────────────────────────────────────── */
+        .hero {
+            padding: 80px 40px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60px; left: 50%;
+            transform: translateX(-50%);
+            width: 700px; height: 400px;
+            background: radial-gradient(ellipse, rgba(99,102,241,0.2) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99,102,241,0.1);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .hero-badge .dot {
+            width: 6px; height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-family: var(--font-head);
+            font-size: clamp(36px, 5vw, 64px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, var(--muted-2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--muted-2);
+            max-width: 520px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: var(--font-head);
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .divider {
+            width: 1px;
+            height: 40px;
+            background: var(--border);
+            align-self: center;
+        }
+
+        /* ── PHASE FILTER ────────────────────────────── */
+        .filter-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 0 40px 40px;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted-2);
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+        /* ── TIMELINE ────────────────────────────────── */
+        .timeline-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 40px 80px;
+            position: relative;
+        }
+
+        .timeline-track {
+            position: absolute;
+            left: 40px;
+            top: 0; bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, var(--border) 5%, var(--border) 95%, transparent);
+        }
+
+        /* ── PHASE HEADER ────────────────────────────── */
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 48px 0 24px;
+            padding-left: 60px;
+            position: relative;
+        }
+
+        .phase-marker {
+            position: absolute;
+            left: -11px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 800;
+            border: 2px solid var(--bg);
+        }
+
+        .phase-tag {
+            font-family: var(--font-head);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 100px;
+        }
+
+        .phase-title {
+            font-family: var(--font-head);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* ── ENTRY ───────────────────────────────────── */
+        .entry {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 24px;
+        }
+
+        .entry-node {
+            position: absolute;
+            left: -6px;
+            top: 20px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--bg);
+        }
+
+        .entry-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: all 0.25s;
+            cursor: default;
+        }
+
+        .entry-card:hover {
+            border-color: rgba(255,255,255,0.14);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .entry-date {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .entry-type {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 100px;
+        }
+
+        .entry-h {
+            font-family: var(--font-head);
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .entry-body {
+            font-size: 14px;
+            line-height: 1.65;
+            color: var(--muted-2);
+            margin-bottom: 16px;
+        }
+
+        /* Tags / pills */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tag {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 100px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--muted-2);
+        }
+
+        /* Decision block */
+        .decision-block {
+            background: rgba(99,102,241,0.06);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--muted-2);
+            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        .decision-block strong { color: var(--primary); }
+
+        /* Outcome block */
+        .outcome-block {
+            background: rgba(16,185,129,0.06);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--muted-2);
+            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        .outcome-block strong { color: var(--success); }
+
+        /* Link button */
+        .link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(45,212,191,0.2);
+            background: rgba(45,212,191,0.05);
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+
+        .link-btn:hover {
+            background: rgba(45,212,191,0.12);
+            border-color: rgba(45,212,191,0.4);
+        }
+
+        /* ── OPTIONS GRID (for prototype comparison entries) */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .option-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .option-card.chosen {
+            border-color: rgba(45,212,191,0.4);
+            background: rgba(45,212,191,0.05);
+        }
+
+        .option-name {
+            font-family: var(--font-head);
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chosen-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            background: rgba(45,212,191,0.1);
+            padding: 2px 8px;
+            border-radius: 100px;
+        }
+
+        .option-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* ── COLOURS BY PHASE ─────────────────────────── */
+        /* Phase 1: Foundation — indigo */
+        .p1 .phase-marker { background: var(--primary); }
+        .p1 .phase-tag { background: rgba(99,102,241,0.12); color: var(--primary); border: 1px solid rgba(99,102,241,0.25); }
+        .p1 .entry-node { background: var(--primary); }
+        .p1 .entry-type { background: rgba(99,102,241,0.1); color: var(--primary); }
+
+        /* Phase 2: Mobile UX — amber */
+        .p2 .phase-marker { background: var(--accent-2); }
+        .p2 .phase-tag { background: rgba(245,158,11,0.12); color: var(--accent-2); border: 1px solid rgba(245,158,11,0.25); }
+        .p2 .entry-node { background: var(--accent-2); }
+        .p2 .entry-type { background: rgba(245,158,11,0.1); color: var(--accent-2); }
+
+        /* Phase 3: Sprint System — teal */
+        .p3 .phase-marker { background: var(--accent); }
+        .p3 .phase-tag { background: rgba(45,212,191,0.12); color: var(--accent); border: 1px solid rgba(45,212,191,0.25); }
+        .p3 .entry-node { background: var(--accent); }
+        .p3 .entry-type { background: rgba(45,212,191,0.1); color: var(--accent); }
+
+        /* Phase 4: Polish & Launch — pink */
+        .p4 .phase-marker { background: var(--accent-3); }
+        .p4 .phase-tag { background: rgba(236,72,153,0.12); color: var(--accent-3); border: 1px solid rgba(236,72,153,0.25); }
+        .p4 .entry-node { background: var(--accent-3); }
+        .p4 .entry-type { background: rgba(236,72,153,0.1); color: var(--accent-3); }
+
+        /* ── ANIMATIONS ─────────────────────────────── */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .entry-card { animation: fadeUp 0.4s ease both; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── FOOTER ─────────────────────────────────── */
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 40px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .footer strong { color: var(--muted-2); }
+    </style>
+</head>
+<body>
+
+<!-- ── HERO ──────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-badge">
+        <span class="dot"></span>
+        Design History
+    </div>
+    <h1>The air-J <span>Evolution</span></h1>
+    <p>A living record of every major design decision, prototype, and milestone that shaped the product.</p>
+    <div class="hero-stats">
+        <div class="stat">
+            <div class="stat-number">4</div>
+            <div class="stat-label">Design Phases</div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Prototypes Built</div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat">
+            <div class="stat-number">1</div>
+            <div class="stat-label">Shipped Direction</div>
+        </div>
+    </div>
+</section>
+
+<!-- ── TIMELINE ───────────────────────────────────── -->
+<div class="timeline-container">
+    <div class="timeline-track"></div>
+
+    <!-- ══ PHASE 1: FOUNDATION ════════════════════ -->
+    <div class="phase-header p1">
+        <div class="phase-marker">1</div>
+        <span class="phase-tag">Phase 01</span>
+        <span class="phase-title">Foundation & Core Architecture</span>
+    </div>
+
+    <div class="entry p1">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">Early 2026</span>
+                <span class="entry-type">Milestone</span>
+            </div>
+            <div class="entry-h">Project Inception</div>
+            <div class="entry-body">
+                air-J started as a single-page Kanban board — a pure client-side application with no backend or database. 
+                The core decision was to keep the entire product as a browser-native experience using localStorage for persistence, 
+                eliminating all infrastructure complexity.
+            </div>
+            <div class="tags">
+                <span class="tag">HTML</span>
+                <span class="tag">CSS</span>
+                <span class="tag">Vanilla JS</span>
+                <span class="tag">localStorage</span>
+            </div>
+            <div class="decision-block">
+                <strong>Design Decision:</strong> No frameworks. Pure HTML/CSS/JS gives zero build-step complexity, 
+                making it instantly hostable on GitHub Pages and accessible to anyone without a Node.js environment.
+            </div>
+        </div>
+    </div>
+
+    <div class="entry p1">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">Early 2026</span>
+                <span class="entry-type">Feature</span>
+            </div>
+            <div class="entry-h">Kanban Board & Branding</div>
+            <div class="entry-body">
+                Established the core Kanban columns (Backlog → Todo → Doing → Done), the dark-mode design system 
+                with Outfit + Plus Jakarta Sans typography, and the signature indigo/teal gradient brand palette. 
+                The sidebar navigation, task creation modal, and category management system were all built in this phase.
+            </div>
+            <div class="tags">
+                <span class="tag">Kanban</span>
+                <span class="tag">Design System</span>
+                <span class="tag">Dark Mode</span>
+                <span class="tag">Categories</span>
+                <span class="tag">Task Modal</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="entry p1">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">Early 2026</span>
+                <span class="entry-type">Architecture</span>
+            </div>
+            <div class="entry-h">Scrum Mode Added</div>
+            <div class="entry-body">
+                A mode toggle was introduced to switch between Kanban (free-form flow) and Scrum (sprint-based) workflows. 
+                In Scrum mode, a dedicated Backlog column appears alongside the active sprint columns, 
+                and a sprint management system tracks start/end dates, progress, and completion stats.
+            </div>
+            <div class="tags">
+                <span class="tag">Scrum Mode</span>
+                <span class="tag">Mode Toggle</span>
+                <span class="tag">Sprints</span>
+                <span class="tag">Backlog</span>
+            </div>
+            <div class="outcome-block">
+                <strong>Outcome:</strong> The dual-mode architecture became the defining differentiator of air-J — 
+                giving users one tool that handles both lightweight task tracking and structured agile sprints.
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PHASE 2: MOBILE UX EXPLORATION ════════ -->
+    <div class="phase-header p2">
+        <div class="phase-marker">2</div>
+        <span class="phase-tag">Phase 02</span>
+        <span class="phase-title">Mobile UX Exploration</span>
+    </div>
+
+    <div class="entry p2">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">May 2026</span>
+                <span class="entry-type">Prototype</span>
+            </div>
+            <div class="entry-h">Mobile UX Options — Round 1</div>
+            <div class="entry-body">
+                The first round of mobile exploration tackled the challenge of adapting the multi-column Kanban/Scrum layout 
+                to a single-column phone screen. Four layout strategies were explored and presented as interactive prototypes.
+            </div>
+            <div class="options-grid">
+                <div class="option-card">
+                    <div class="option-name">Option 1</div>
+                    <div class="option-desc">Horizontal scroll between columns with a segmented tab control at the top.</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-name">Option 2</div>
+                    <div class="option-desc">Collapsible accordion sections, each column stacked vertically.</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-name">Option 3</div>
+                    <div class="option-desc">Bottom sheet drawers for secondary columns, focused primary view.</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-name">Option 4</div>
+                    <div class="option-desc">Dashboard overview mode with contextual column access via floating actions.</div>
+                </div>
+            </div>
+            <a href="mobile-ux-options/index.html" class="link-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                View Round 1 Prototypes
+            </a>
+        </div>
+    </div>
+
+    <div class="entry p2">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">May 2026</span>
+                <span class="entry-type">Prototype</span>
+            </div>
+            <div class="entry-h">Mobile UX Options — Round 2 (Detailed)</div>
+            <div class="entry-body">
+                Option 4 from Round 1 was selected for deeper exploration. A more detailed interactive prototype was built 
+                to stress-test the dashboard-first approach, focusing on how sprint planning would work within 
+                this layout paradigm on small screens.
+            </div>
+            <div class="tags">
+                <span class="tag">Option 4</span>
+                <span class="tag">Dashboard-first</span>
+                <span class="tag">Sprint Planning</span>
+            </div>
+            <a href="mobile-ux-options/v2-option4-detailed.html" class="link-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                View Detailed Option 4 Prototype
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ PHASE 3: SPRINT SYSTEM ════════════════ -->
+    <div class="phase-header p3">
+        <div class="phase-marker">3</div>
+        <span class="phase-tag">Phase 03</span>
+        <span class="phase-title">Sprint Planning System Design</span>
+    </div>
+
+    <div class="entry p3">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">June 2026</span>
+                <span class="entry-type">Prototype</span>
+            </div>
+            <div class="entry-h">Sprint Planning UX — Three Approaches</div>
+            <div class="entry-body">
+                The core design challenge: how should a user plan a sprint on mobile? Three distinctly different 
+                interaction models were prototyped and presented side-by-side in a device mockup showcase for evaluation.
+            </div>
+            <div class="options-grid">
+                <div class="option-card">
+                    <div class="option-name">Option 1<br><span style="font-weight:400; font-size:12px; color:var(--muted)">Native Tabs</span></div>
+                    <div class="option-desc">Backlog and Sprint as top-level tab views. Familiar, straightforward navigation.</div>
+                </div>
+                <div class="option-card chosen">
+                    <div class="option-name">
+                        Option 2
+                        <span class="chosen-badge">✓ Chosen</span>
+                    </div>
+                    <div class="option-name" style="font-weight:400; font-size:12px; color:var(--muted); margin-top:-4px;">Sprint Cart</div>
+                    <div class="option-desc">A persistent floating "Sprint Cart" banner lets users stage tasks for the next sprint from anywhere in the app.</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-name">Option 3<br><span style="font-weight:400; font-size:12px; color:var(--muted)">Planning Wizard</span></div>
+                    <div class="option-desc">A step-by-step guided full-screen wizard walks users through sprint setup sequentially.</div>
+                </div>
+            </div>
+            <div class="decision-block" style="margin-top:16px;">
+                <strong>Why Option 2 (Sprint Cart)?</strong> It allows users to plan the sprint contextually — 
+                adding tasks to the cart while browsing the backlog — rather than requiring a dedicated mode switch. 
+                The floating banner is persistent but unobtrusive, and the sheet slide-up felt native and fluid on mobile.
+            </div>
+            <a href="sprint-planning-prototypes/showcase.html" class="link-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                View All Three Prototypes
+            </a>
+        </div>
+    </div>
+
+    <div class="entry p3">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">June 2026</span>
+                <span class="entry-type">Feature</span>
+            </div>
+            <div class="entry-h">Sprint Cart Implemented in Production</div>
+            <div class="entry-body">
+                Option 2 was built into the main <code style="background:rgba(255,255,255,0.07); padding:2px 6px; border-radius:4px; font-size:13px;">src/</code> application. 
+                Key refinements during implementation included: the "Active" sprint header widget replacing a bulkier 
+                sprint indicator, empty-state guidance for the backlog and sprint planning screen, and a floating 
+                cart banner that only appears in Scrum mode. A quick-add task field was also added directly to the backlog 
+                for rapid entry without opening the full task modal.
+            </div>
+            <div class="tags">
+                <span class="tag">Sprint Cart</span>
+                <span class="tag">Active Widget</span>
+                <span class="tag">Empty States</span>
+                <span class="tag">Quick Add</span>
+                <span class="tag">Scrum Mode</span>
+            </div>
+            <div class="outcome-block">
+                <strong>Shipped:</strong> Sprint Cart lives in production as the primary sprint planning mechanism. 
+                Users can stage tasks, review, and lock in the sprint — all without leaving their current view.
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PHASE 4: POLISH & LAUNCH ══════════════ -->
+    <div class="phase-header p4">
+        <div class="phase-marker">4</div>
+        <span class="phase-tag">Phase 04</span>
+        <span class="phase-title">Polish, Cleanup & GitHub Launch</span>
+    </div>
+
+    <div class="entry p4">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">June 2026</span>
+                <span class="entry-type">Fix</span>
+            </div>
+            <div class="entry-h">Bug Fixes & Responsive Refinements</div>
+            <div class="entry-body">
+                Multiple rounds of bug fixes addressed mobile-specific issues: the Next Sprint sticky component 
+                was scoped to Scrum tab only, the floating action button (FAB) was repositioned to avoid overlapping 
+                the Sprint Cart banner, the active sprint widget was condensed to save vertical space, and the 
+                sprint cart was made visible even on the "No Sprint Started" screen with contextual guidance copy.
+            </div>
+            <div class="tags">
+                <span class="tag">Mobile</span>
+                <span class="tag">FAB</span>
+                <span class="tag">Sprint Widget</span>
+                <span class="tag">Responsive</span>
+                <span class="tag">Empty State</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="entry p4">
+        <div class="entry-node"></div>
+        <div class="entry-card">
+            <div class="entry-meta">
+                <span class="entry-date">June 2026</span>
+                <span class="entry-type">Milestone</span>
+            </div>
+            <div class="entry-h">Pre-launch Security Review & Repository Setup</div>
+            <div class="entry-body">
+                Before the first public push to GitHub, a full PII and security audit was performed across all files. 
+                Personal names, absolute local file paths, and developer credentials were removed or anonymised. 
+                A <code style="background:rgba(255,255,255,0.07); padding:2px 6px; border-radius:4px; font-size:13px;">.gitignore</code> was created 
+                to block macOS system files, Node modules, and environment secrets from ever entering version control. 
+                A mandatory pre-push security scan rule was written into the project's agent configuration.
+            </div>
+            <div class="tags">
+                <span class="tag">Security Audit</span>
+                <span class="tag">.gitignore</span>
+                <span class="tag">PII Removal</span>
+                <span class="tag">GitHub</span>
+            </div>
+            <div class="outcome-block">
+                <strong>Outcome:</strong> First public commit pushed to <strong>github.com/lvl99product/air-j</strong>. 
+                GitHub Pages configured to serve the live application from the <code style="background:rgba(255,255,255,0.07); padding:2px 6px; border-radius:4px; font-size:13px;">src/</code> directory.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer class="footer">
+    <strong>air-J</strong> &nbsp;·&nbsp; Design Timeline &nbsp;·&nbsp; Generated June 2026 &nbsp;·&nbsp; All prototypes linked above are preserved reference artefacts.
+</footer>
+
+</body>
+</html>
