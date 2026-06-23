@@ -896,6 +896,7 @@ body {
 .card-nav-controls {
     display: flex;
     gap: 6px;
+    margin-left: auto;
 }
 
 .quick-shift-btn {

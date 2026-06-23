@@ -33,6 +33,10 @@
 20. [Sprint Lifecycle & Header Widget](#20-sprint-lifecycle--header-widget)
 21. [Sprint Review Bottom Sheet](#21-sprint-review-bottom-sheet)
 22. [Sprint History & Storage Limits](#22-sprint-history--storage-limits)
+23. [Profile Dropdown](#23-profile-dropdown)
+24. [Personalisation](#24-personalisation)
+25. [Data Export, Import & Cloud Sync Instructions](#25-data-export-import--cloud-sync-instructions)
+26. [Custom Confirmation Dialogs](#26-custom-confirmation-dialogs)
 
 ---
 
@@ -84,7 +88,7 @@ The primary workspace area that organises tasks into three status columns: **To 
 ## 2. Task CRUD
 
 **Description:**
-The create, read, update, and delete lifecycle for tasks. All mutations go through a single modal dialog that operates in either **Create** or **Edit** mode. Deletion uses a native `confirm()` dialog.
+The create, read, update, and delete lifecycle for tasks. All mutations go through a single modal dialog that operates in either **Create** or **Edit** mode. Deletion uses a styled custom confirmation dialog.
 
 **Files & DOM IDs:**
 
@@ -142,7 +146,7 @@ The create, read, update, and delete lifecycle for tasks. All mutations go throu
 **Delete Flow:**
 1. User clicks the trash icon (`.delete-card-trigger`) on a card
 2. `deleteTask(id)` called
-3. Native `confirm()` dialog shown: `Are you sure you want to remove "<title>"?`
+3. Styled custom confirmation dialog shown: `Are you sure you want to remove "<title>"?`
 4. If confirmed: `tasks` filtered to exclude the ID, `saveTasks()`, `renderAppUI()`
 
 **Key Functions:**
@@ -1023,6 +1027,90 @@ Stores read-only records of past sprints. Accessible from the Scrum sidebar, cli
 
 ---
 
+## 23. Profile Dropdown
+
+**Description:**
+A header-based dropdown menu anchored to the user avatar. Toggles visible dropdown items on click, letting users manage themes, edit personalization preferences, and handle data synchronization.
+
+**Files & DOM IDs:**
+
+| File | Reference |
+|---|---|
+| `src/index.html` | `#profile-dropdown-wrapper`, `#profile-avatar`, `#profile-dropdown` |
+| `src/app.js` | Dropdown click-outside and toggle handlers inside `setupApplicationListeners()` |
+| `src/styles.css` | `.profile-dropdown-wrapper`, `.profile-dropdown`, `.profile-dropdown-item` |
+
+**Dropdown Options:**
+- **Theme Switcher**: Toggles dark/light theme (re-uses Feature #11)
+- **Personalize**: Opens the personalization modal dialog (Feature #24)
+- **Data & Sync**: Opens the local data management modal (Feature #25)
+
+**Dismissal:**
+- Closes automatically when clicking any dropdown item, or clicking anywhere outside the dropdown wrapper.
+
+---
+
+## 24. Personalisation
+
+**Description:**
+A customizer dialog that allows the user to change their name and the workspace title. Updates are propagated live to the welcome greeting banner, profile panels, and user initials in avatar slots.
+
+**Files & DOM IDs:**
+
+| File | Reference |
+|---|---|
+| `src/index.html` | `#personalize-modal`, `#personalize-form`, `#form-user-name`, `#form-workspace-name` |
+| `src/index.html` | `#personalize-close-btn`, `#personalize-cancel-btn`, `#personalize-submit-btn` |
+| `src/app.js` | `userName`, `workspaceName` state variables |
+| `src/app.js` | `setupPersonalizationListeners()`, `savePersonalization()`, `updateProfileUI()` |
+
+**Rules & Validation:**
+- Default user name is `"User"`. Default workspace name is `"Workspace"`.
+- User Name input is capped at 20 characters (`maxlength="20"`). Workspace Name input is capped at 30 characters (`maxlength="30"`).
+- Persisted to localStorage keys `airj-username` and `airj-workspace`.
+
+---
+
+## 25. Data Export, Import & Cloud Sync Instructions
+
+**Description:**
+A manual sync dashboard supporting a local-first, privacy-respecting architecture. Allows the user to download a full backup `.json` file of their tasks, categories, mode, and cycles, or import that backup file on another device using either a replacement or a merge strategy.
+
+**Files & DOM IDs:**
+
+| File | Reference |
+|---|---|
+| `src/index.html` | `#data-sync-modal`, `#export-data-btn`, `#import-data-btn`, `#import-file-input`, `#import-strategy` |
+| `src/index.html` | `#data-sync-close-btn` |
+| `src/app.js` | `setupDataManagementListeners()`, `exportData()`, `importData(file, strategy)` |
+
+**Workflow & Rules:**
+- **Export Data**: Packages tasks, categories, mode, sprints, sprint history, and counter. Downloads as `air-j-backup-YYYY-MM-DD.json`.
+- **Import Data (Replace)**: Overwrites all existing tasks, categories, and settings. Prompts the user with a styled custom confirmation dialog before performing the write.
+- **Import Data (Merge)**: Appends new tasks and categories, skipping duplicates by comparing IDs/names. Does not overwrite current configurations.
+- **Cloud Sync Instructions**: Detailed guidance is provided within the panel showing how to manually back up to Google Drive, Dropbox, or OneDrive to achieve cross-device synchronization.
+
+---
+
+## 26. Custom Confirmation Dialogs
+
+**Description:**
+A custom styled overlay modal that replaces native browser `confirm()` prompts to ensure visual consistency and prevent interruption of the application flow. Used for critical operations such as data overwrite on import, task deletion, and active sprint lifecycle events.
+
+**Files & DOM IDs:**
+
+| File | Reference |
+|---|---|
+| `src/index.html` | `#native-confirm-modal`, `#confirm-modal-title`, `#confirm-modal-message` |
+| `src/index.html` | `#confirm-modal-action-btn`, `#confirm-modal-cancel-btn` |
+| `src/app.js` | `showConfirmDialog(title, message, confirmText, isDanger, onConfirm)` |
+
+**Functionality & Lifecycle:**
+- Accepts title, message text, confirm button text, a boolean indicating danger status (adds red color treatment), and a success callback.
+- Cleans up and removes click listeners on action and cancel buttons on every close to prevent listener stacking memory leaks.
+
+---
+
 ## Appendix: Initialisation Sequence
 
 The app bootstraps on `DOMContentLoaded` in this order:
@@ -1031,15 +1119,17 @@ The app bootstraps on `DOMContentLoaded` in this order:
 1. updateDateDisplay()         → Set current date string
 2. updateWelcomeGreeting()     → Set time-based greeting
 3. setInterval(updateWelcomeGreeting, 60000)  → Refresh greeting every minute
-4. loadAppData()               → Load theme, tasks, categories from localStorage
+4. loadAppData()               → Load theme, tasks, categories, username, workspace from localStorage
 5. renderAppUI()               → Initial board render
 6. setupApplicationListeners() → Register all event handlers (includes setupCategoryManager())
 7. setupDragAndDropHandlers()  → Register column drag/drop listeners
 8. setupMobileTabSwitcher()    → Register segmented tab control
-9. checkSprintExpiry()         → Scan for and transition expired sprints
+9. setupDataManagementListeners() → Register export/import handlers
+10. setupPersonalizationListeners() → Register profile customizing modal handlers
+11. checkSprintExpiry()        → Scan for and transition expired sprints
 ```
 
-**Source:** `src/app.js` lines 2418–2438
+**Source:** `src/app.js` lines 2537–2559
 
 ---
 
@@ -1054,6 +1144,8 @@ The app bootstraps on `DOMContentLoaded` in this order:
 | `searchQuery` | `String` | `''` | Current search input (lowercase) |
 | `activeMobileTab` | `String` | `'todo'` | Currently visible mobile column |
 | `isLightTheme` | `Boolean` | `false` | Current theme mode |
+| `userName` | `String` | `'User'` | User display name |
+| `workspaceName` | `String` | `'Workspace'` | Workspace title |
 | `currentMode` | `String` | `'kanban'` | Current active mode ('kanban' or 'scrum') |
 | `sprints` | `Array<Object>` | `[]` | Array containing current active/planning sprints |
 | `sprintHistory` | `Array<Object>` | `[]` | Array of completed sprint history logs |
@@ -1068,10 +1160,12 @@ The app bootstraps on `DOMContentLoaded` in this order:
 
 | File | Purpose | Size |
 |---|---|---|
-| `src/index.html` | Document structure, all DOM elements, SVG icons | 710 lines |
-| `src/app.js` | Application logic, state management, event handling | 2466 lines |
+| `src/index.html` | Document structure, all DOM elements, SVG icons | 833 lines |
+| `src/app.js` | Application logic, state management, event handling | 2768 lines |
 | `src/styles.css` | Design system, component styles, responsive breakpoints | 2965 lines |
-| `FEATURES.md` | This document | — |
-| `mobile-ux-options/` | Exploratory mobile UX design prototypes (not part of core app) | 2 HTML files |
-| `patch_app.py` | Utility script (not part of core app) | — |
-| `test_bug.js` | Test script (not part of core app) | — |
+| `docs/FEATURES.md` | This document | — |
+| `archive/mobile-ux-options/` | Exploratory mobile UX design prototypes (not part of core app) | 2 HTML files |
+| `archive/sprint-planning-prototypes/` | Exploratory sprint planning design prototypes (not part of core app) | 4 HTML files |
+| `scripts/patch_app.py` | Utility script (not part of core app) | — |
+| `scripts/test_bug.js` | Test script (not part of core app) | — |
+| `scripts/verify_integrity.py` | Static check test script | — |

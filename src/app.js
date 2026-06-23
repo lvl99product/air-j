@@ -11,19 +11,6 @@ function updateDateDisplay() {
     }
 }
 
-// --- Dynamic Profile Greeting ---
-function updateWelcomeGreeting() {
-    const welcomeHeader = document.getElementById('welcome-message-header');
-    if (welcomeHeader) {
-        const hour = new Date().getHours();
-        let greeting = "Manage your flow, User";
-        if (hour < 12) greeting = "Good morning, User";
-        else if (hour < 17) greeting = "Flow through your afternoon, User";
-        else greeting = "Review your day, User";
-        welcomeHeader.textContent = greeting;
-    }
-}
-
 // --- Task Database & State Model ---
 let tasks = [];
 let categories = [];
@@ -32,6 +19,35 @@ let currentPriorityFilter = 'all';
 let searchQuery = '';
 let activeMobileTab = 'todo';
 let isLightTheme = false;
+let userName = "User";
+let workspaceName = "Workspace";
+
+// --- Dynamic Profile Greeting ---
+function updateWelcomeGreeting() {
+    const welcomeHeader = document.getElementById('welcome-message-header');
+    if (welcomeHeader) {
+        const hour = new Date().getHours();
+        let greeting = `Manage your flow, ${userName}`;
+        if (hour < 12) greeting = `Good morning, ${userName}`;
+        else if (hour < 17) greeting = `Flow through your afternoon, ${userName}`;
+        else greeting = `Review your day, ${userName}`;
+        welcomeHeader.textContent = greeting;
+    }
+}
+
+function updateProfileUI() {
+    const avatarLetter = userName ? userName.charAt(0).toUpperCase() : "U";
+    const avatars = document.querySelectorAll('.user-avatar');
+    avatars.forEach(avatar => avatar.textContent = avatarLetter);
+    
+    const nameEls = document.querySelectorAll('.profile-name, .profile-dropdown-header strong');
+    nameEls.forEach(el => el.textContent = userName || "User");
+    
+    const workspaceEls = document.querySelectorAll('.profile-title, .profile-dropdown-header span');
+    workspaceEls.forEach(el => el.textContent = workspaceName || "Workspace");
+    
+    updateWelcomeGreeting();
+}
 
 // Dual Mode State variables
 let currentMode = 'kanban';         // 'kanban' | 'scrum'
@@ -181,6 +197,16 @@ function loadAppData() {
     if (savedCounter) {
         sprintCounter = parseInt(savedCounter) || 0;
     }
+
+    // 8. Load Personalization
+    userName = safeStorage.get('airj-username') || "User";
+    workspaceName = safeStorage.get('airj-workspace') || "Workspace";
+    updateProfileUI();
+}
+
+function savePersonalization() {
+    safeStorage.set('airj-username', userName);
+    safeStorage.set('airj-workspace', workspaceName);
 }
 
 function saveTasks() {
@@ -294,7 +320,7 @@ function switchMode(mode) {
     
     // Re-render UI
     renderAppUI();
-    showToastNotification(`Switched to ${mode === 'scrum' ? 'Scrum' : 'Kanban'} mode.`);
+    showToastNotification(`Switched to ${mode === 'scrum' ? 'Cycles' : 'Flow'} mode.`);
 }
 
 // --- Dynamic UI Rendering Engine ---
@@ -1383,7 +1409,35 @@ function updateStatsAndBadges(counts) {
 
 // Recalculate complete dashboard counts for category items
 function updateSidebarCategoryBadges() {
-    const modeTasks = tasks.filter(t => t.mode === currentMode);
+    let modeTasks;
+    if (currentMode === 'scrum') {
+        const activeSprint = sprints.find(s => s.status === 'active');
+        const planningSprint = sprints.find(s => s.status === 'planning');
+        if (activeSprint) {
+            modeTasks = tasks.filter(t => t.mode === 'scrum' && t.sprintId === activeSprint.id);
+        } else if (planningSprint) {
+            modeTasks = tasks.filter(t => t.mode === 'scrum' && t.sprintId === planningSprint.id);
+        } else {
+            modeTasks = tasks.filter(t => t.mode === 'scrum');
+        }
+    } else {
+        modeTasks = tasks.filter(t => t.mode === 'kanban');
+    }
+    
+    // Status (state) filter logic
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+        if (activeMobileTab === 'todo') {
+            modeTasks = modeTasks.filter(t => t.status === 'todo');
+        } else if (activeMobileTab === 'doing') {
+            modeTasks = modeTasks.filter(t => t.status === 'doing');
+        } else if (activeMobileTab === 'done') {
+            modeTasks = modeTasks.filter(t => t.status === 'done');
+        }
+    } else {
+        // Desktop: category counts represent active work (exclude done tasks)
+        modeTasks = modeTasks.filter(t => t.status !== 'done');
+    }
     
     let totals = { all: modeTasks.length };
     categories.forEach(c => totals[c.name] = 0);
@@ -1485,12 +1539,18 @@ function deleteTask(id) {
     const taskToDelete = tasks.find(t => t.id === id);
     if (!taskToDelete) return;
 
-    if (confirm(`Are you sure you want to remove "${taskToDelete.title}"?`)) {
-        tasks = tasks.filter(t => t.id !== id);
-        saveTasks();
-        renderAppUI();
-        showToastNotification("Task removed from flow.");
-    }
+    showConfirmDialog(
+        "Delete Task",
+        `Are you sure you want to remove "${escapeHTML(taskToDelete.title)}"?`,
+        "Delete",
+        true,
+        () => {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderAppUI();
+            showToastNotification("Task removed from flow.");
+        }
+    );
 }
 
 // --- Responsive Creator Dialog Handler ---
@@ -1567,6 +1627,50 @@ function showToastNotification(message) {
     }
 }
 
+// --- Native Confirm Dialog ---
+function showConfirmDialog(title, message, confirmText, isDanger, onConfirm) {
+    const modal = document.getElementById('native-confirm-modal');
+    if (!modal) return;
+    
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-message').textContent = message;
+    
+    const actionBtn = document.getElementById('confirm-modal-action-btn');
+    actionBtn.textContent = confirmText;
+    
+    if (isDanger) {
+        if (!actionBtn.classList.contains('btn-primary')) actionBtn.classList.add('btn-primary');
+        actionBtn.style.background = '#EF4444';
+        actionBtn.style.color = 'white';
+        actionBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+    } else {
+        if (!actionBtn.classList.contains('btn-primary')) actionBtn.classList.add('btn-primary');
+        actionBtn.style.background = '';
+        actionBtn.style.color = '';
+        actionBtn.style.boxShadow = '';
+    }
+    
+    modal.classList.add('open');
+    
+    const cancelBtn = document.getElementById('confirm-modal-cancel-btn');
+    
+    // Create new clean handlers to avoid stacking multiple listeners
+    const closeAndCleanup = () => {
+        modal.classList.remove('open');
+        cancelBtn.removeEventListener('click', onCancelClick);
+        actionBtn.removeEventListener('click', onActionClick);
+    };
+    
+    const onCancelClick = () => closeAndCleanup();
+    const onActionClick = () => {
+        closeAndCleanup();
+        if (onConfirm) onConfirm();
+    };
+    
+    cancelBtn.addEventListener('click', onCancelClick);
+    actionBtn.addEventListener('click', onActionClick);
+}
+
 // --- Desktop HTML5 Drag & Drop Logic ---
 function setupDragAndDropHandlers() {
     const boardColumns = document.querySelectorAll('.kanban-column');
@@ -1636,6 +1740,7 @@ function setupMobileTabSwitcher() {
             });
 
             activeMobileTab = targetStatus;
+            updateSidebarCategoryBadges();
         });
     });
 }
@@ -2445,6 +2550,8 @@ window.addEventListener('DOMContentLoaded', () => {
     setupApplicationListeners();
     setupDragAndDropHandlers();
     setupMobileTabSwitcher();
+    setupDataManagementListeners();
+    setupPersonalizationListeners();
 
     // 5. Sprint Expiry Checks
     checkSprintExpiry();
@@ -2462,4 +2569,200 @@ function escapeHTML(str) {
             '"': '&quot;'
         }[tag] || tag)
     );
+}
+
+// --- Data Management (Export/Import) ---
+function setupDataManagementListeners() {
+    const dataBtn = document.getElementById('data-management-btn');
+    const dataModal = document.getElementById('data-sync-modal');
+    const closeBtn = document.getElementById('data-sync-close-btn');
+    const exportBtn = document.getElementById('export-data-btn');
+    const importBtn = document.getElementById('import-data-btn');
+    const fileInput = document.getElementById('import-file-input');
+
+    if (dataBtn && dataModal) {
+        dataBtn.addEventListener('click', () => {
+            const dropdown = document.getElementById('profile-dropdown');
+            if (dropdown) dropdown.classList.remove('active');
+            dataModal.classList.add('open');
+        });
+    }
+
+    if (closeBtn && dataModal) {
+        closeBtn.addEventListener('click', () => {
+            dataModal.classList.remove('open');
+        });
+    }
+
+    if (dataModal) {
+        dataModal.addEventListener('click', (e) => {
+            if (e.target === dataModal) dataModal.classList.remove('open');
+        });
+    }
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportData);
+    }
+
+    if (importBtn && fileInput) {
+        importBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const strategy = document.getElementById('import-strategy').value;
+                importData(file, strategy);
+                fileInput.value = ''; // Reset input so same file can be loaded again if needed
+            }
+        });
+    }
+}
+
+// --- Personalization ---
+function setupPersonalizationListeners() {
+    const personalizeBtn = document.getElementById('personalize-btn');
+    const personalizeModal = document.getElementById('personalize-modal');
+    const closeBtn = document.getElementById('personalize-close-btn');
+    const cancelBtn = document.getElementById('personalize-cancel-btn');
+    const form = document.getElementById('personalize-form');
+    
+    if (personalizeBtn && personalizeModal) {
+        personalizeBtn.addEventListener('click', () => {
+            const dropdown = document.getElementById('profile-dropdown');
+            if (dropdown) dropdown.classList.remove('active');
+            
+            // Populate form with current values
+            document.getElementById('form-user-name').value = userName;
+            document.getElementById('form-workspace-name').value = workspaceName;
+            
+            personalizeModal.classList.add('open');
+        });
+    }
+
+    const closeModal = () => {
+        if (personalizeModal) personalizeModal.classList.remove('open');
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    
+    if (personalizeModal) {
+        personalizeModal.addEventListener('click', (e) => {
+            if (e.target === personalizeModal) closeModal();
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('form-user-name').value.trim();
+            const workspaceInput = document.getElementById('form-workspace-name').value.trim();
+            
+            if (nameInput) userName = nameInput;
+            if (workspaceInput) workspaceName = workspaceInput;
+            
+            savePersonalization();
+            updateProfileUI();
+            closeModal();
+            showToastNotification("Personalization saved.");
+        });
+    }
+}
+
+function exportData() {
+    const exportObj = {
+        'airj-tasks': safeStorage.get('airj-tasks'),
+        'airj-categories': safeStorage.get('airj-categories'),
+        'airj-theme': safeStorage.get('airj-theme'),
+        'airj-mode': safeStorage.get('airj-mode'),
+        'airj-sprints': safeStorage.get('airj-sprints'),
+        'airj-sprint-history': safeStorage.get('airj-sprint-history'),
+        'airj-sprint-counter': safeStorage.get('airj-sprint-counter'),
+        'exportDate': new Date().toISOString()
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+    const dlAnchorElem = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0];
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `air-j-backup-${dateStr}.json`);
+    dlAnchorElem.click();
+    showToastNotification("Backup file exported successfully.");
+}
+
+function importData(file, strategy) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (!importedData['airj-tasks'] && !importedData['airj-categories']) {
+                showToastNotification("Invalid backup file format.");
+                return;
+            }
+
+            if (strategy === 'replace') {
+                showConfirmDialog(
+                    "Overwrite Data",
+                    "This will overwrite all your current tasks and settings. Are you sure?",
+                    "Overwrite",
+                    true,
+                    () => {
+                        if (importedData['airj-tasks']) safeStorage.set('airj-tasks', importedData['airj-tasks']);
+                        if (importedData['airj-categories']) safeStorage.set('airj-categories', importedData['airj-categories']);
+                        if (importedData['airj-theme']) safeStorage.set('airj-theme', importedData['airj-theme']);
+                        if (importedData['airj-mode']) safeStorage.set('airj-mode', importedData['airj-mode']);
+                        if (importedData['airj-sprints']) safeStorage.set('airj-sprints', importedData['airj-sprints']);
+                        if (importedData['airj-sprint-history']) safeStorage.set('airj-sprint-history', importedData['airj-sprint-history']);
+                        if (importedData['airj-sprint-counter']) safeStorage.set('airj-sprint-counter', importedData['airj-sprint-counter']);
+                        
+                        loadAppData();
+                        renderAppUI();
+                        if (typeof populateCategoryDropdowns === 'function') populateCategoryDropdowns();
+                        if (typeof renderCatList === 'function') renderCatList();
+                        
+                        document.getElementById('data-sync-modal').classList.remove('open');
+                        showToastNotification("Data successfully replaced.");
+                    }
+                );
+            } else if (strategy === 'merge') {
+                const importedTasks = importedData['airj-tasks'] ? JSON.parse(importedData['airj-tasks']) : [];
+                const importedCats = importedData['airj-categories'] ? JSON.parse(importedData['airj-categories']) : [];
+                
+                let tasksAdded = 0;
+                importedTasks.forEach(impTask => {
+                    if (!tasks.some(t => t.id === impTask.id)) {
+                        tasks.push(impTask);
+                        tasksAdded++;
+                    }
+                });
+                
+                let catsAdded = 0;
+                importedCats.forEach(impCat => {
+                    if (!categories.some(c => c.name === impCat.name)) {
+                        categories.push({ id: 'cat_' + Date.now() + Math.floor(Math.random() * 1000), name: impCat.name, color: impCat.color });
+                        catsAdded++;
+                    }
+                });
+
+                if (tasksAdded > 0 || catsAdded > 0) {
+                    saveTasks();
+                    saveCategories();
+                    renderAppUI();
+                    if (typeof populateCategoryDropdowns === 'function') populateCategoryDropdowns();
+                    if (typeof renderCatList === 'function') renderCatList();
+                    showToastNotification(`Merged: ${tasksAdded} tasks, ${catsAdded} categories added.`);
+                } else {
+                    showToastNotification("No new data to merge.");
+                }
+                document.getElementById('data-sync-modal').classList.remove('open');
+            }
+        } catch (error) {
+            console.error("Import failed:", error);
+            showToastNotification("Failed to read backup file.");
+        }
+    };
+    reader.readAsText(file);
 }

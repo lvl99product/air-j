@@ -39,8 +39,8 @@
 
         <div class="mode-toggle-wrapper" id="header-mode-toggle" data-active-mode="kanban">
             <div class="mode-toggle-slider"></div>
-            <button class="mode-toggle-btn active" data-mode="kanban" title="Switch to Kanban mode">Kanban</button>
-            <button class="mode-toggle-btn" data-mode="scrum" title="Switch to Scrum mode">Scrum</button>
+            <button class="mode-toggle-btn active" data-mode="kanban" title="Switch to Flow mode">Flow</button>
+            <button class="mode-toggle-btn" data-mode="scrum" title="Switch to Cycles mode">Cycles</button>
         </div>
 
         <div class="header-actions">
@@ -59,6 +59,25 @@
                             </svg>
                         </span>
                         <span class="item-label" id="theme-toggle-label">Dark Theme</span>
+                    </button>
+                    <button class="profile-dropdown-item" id="personalize-btn" title="Personalize your experience">
+                        <span class="item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </span>
+                        <span class="item-label">Personalize</span>
+                    </button>
+                    <button class="profile-dropdown-item" id="data-management-btn" title="Manage Data & Sync">
+                        <span class="item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </span>
+                        <span class="item-label">Data & Sync</span>
                     </button>
                 </div>
             </div>
@@ -693,6 +712,111 @@
                         <button type="submit" class="btn-primary" style="padding: 8px 16px; font-size: 13px;">Add Category</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data & Sync Modal -->
+    <div class="modal-overlay" id="data-sync-modal">
+        <div class="modal-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Data & Sync</h3>
+                <button class="sheet-close-btn" id="data-sync-close-btn" aria-label="Close dialog">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top: 10px;">
+                <div class="data-sync-instructional" style="background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <h4 style="margin-top: 0; margin-bottom: 8px; color: var(--text-main); font-size: 14px;">How to sync across devices:</h4>
+                    <p style="margin: 0 0 12px 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">Air-J is a privacy-first, offline application. Your data never leaves your browser automatically. To use Air-J across multiple devices:</p>
+                    <ol style="margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
+                        <li style="margin-bottom: 6px;">Click <strong>Export Backup</strong> to download your tasks.</li>
+                        <li style="margin-bottom: 6px;">Save this <code>.json</code> file to your preferred cloud drive: 
+                            <div style="margin-top: 4px; display: flex; gap: 8px;">
+                                <a href="https://drive.google.com" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none; font-weight: 500;">Google Drive</a> • 
+                                <a href="https://www.dropbox.com" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none; font-weight: 500;">Dropbox</a> • 
+                                <a href="https://onedrive.live.com" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none; font-weight: 500;">OneDrive</a>
+                            </div>
+                        </li>
+                        <li>Open Air-J on your other device and <strong>Import</strong> the file.</li>
+                    </ol>
+                </div>
+
+                <div class="data-sync-actions" style="display: flex; flex-direction: column; gap: 24px;">
+                    <div class="data-sync-section">
+                        <h4 style="margin-top: 0; margin-bottom: 4px; color: var(--text-main); font-size: 14px;">Export Data</h4>
+                        <p style="margin: 0 0 12px 0; color: var(--text-muted); font-size: 12px;">Download all your tasks, categories, and sprint history.</p>
+                        <button class="btn-primary" id="export-data-btn" style="width: 100%; justify-content: center; padding: 12px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 8px;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export Backup (.json)
+                        </button>
+                    </div>
+
+                    <div class="data-sync-section">
+                        <h4 style="margin-top: 0; margin-bottom: 4px; color: var(--text-main); font-size: 14px;">Import Data</h4>
+                        <p style="margin: 0 0 12px 0; color: var(--text-muted); font-size: 12px;">Restore from a previously exported backup file.</p>
+                        <div class="import-controls">
+                            <select id="import-strategy" class="form-select" style="width: 100%; margin-bottom: 12px; background: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-size: 13px; font-family: inherit;">
+                                <option value="replace" selected>Replace current data (Recommended)</option>
+                                <option value="merge">Merge with current data</option>
+                            </select>
+                            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                            <button class="btn-secondary" id="import-data-btn" style="width: 100%; justify-content: center; padding: 12px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 8px;">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Select Backup File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personalize Modal -->
+    <div class="modal-overlay" id="personalize-modal">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3>Personalize</h3>
+                <button class="sheet-close-btn" id="personalize-close-btn" aria-label="Close dialog">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top: 10px;">
+                <form class="task-form" id="personalize-form" autocomplete="off">
+                    <div class="form-group">
+                        <label for="form-user-name">Your Name</label>
+                        <input type="text" id="form-user-name" placeholder="E.g. Alex" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="form-workspace-name">Workspace Name</label>
+                        <input type="text" id="form-workspace-name" placeholder="E.g. My Workspace" maxlength="30">
+                    </div>
+                    <div class="form-actions" style="margin-top: 24px;">
+                        <button type="button" class="btn-secondary" id="personalize-cancel-btn">Cancel</button>
+                        <button type="submit" class="btn-primary" id="personalize-submit-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Native Confirm Modal -->
+    <div class="modal-overlay" id="native-confirm-modal" style="z-index: 10000;">
+        <div class="modal-card" style="max-width: 400px; padding: 24px;">
+            <div class="modal-header" style="margin-bottom: 12px; padding-bottom: 0; border-bottom: none;">
+                <h3 id="confirm-modal-title" style="margin: 0;">Confirm Action</h3>
+            </div>
+            <div class="modal-body" style="padding-top: 0;">
+                <p id="confirm-modal-message" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Are you sure you want to proceed?</p>
+                
+                <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 0;">
+                    <button type="button" class="btn-secondary" id="confirm-modal-cancel-btn">Cancel</button>
+                    <button type="button" class="btn-primary" id="confirm-modal-action-btn">Confirm</button>
+                </div>
             </div>
         </div>
     </div>
