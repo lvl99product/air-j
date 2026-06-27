@@ -1338,10 +1338,13 @@ function createTaskCardDOM(task) {
         card.classList.remove('dragging');
     });
 
-    // 2. Open Edit Overlay (changed to View Overlay)
-    card.addEventListener('click', () => {
-        openTaskViewModal(task);
-    });
+    // 2. Open View Overlay (fixes iOS Safari div click bug)
+    card.onclick = (e) => {
+        // Only open if they didn't click a quick action button
+        if (!e.target.closest('button')) {
+            openTaskViewModal(task);
+        }
+    };
 
     // 3. Delete Action Hook
     card.querySelector('.delete-card-trigger').addEventListener('click', (e) => {
@@ -1621,16 +1624,23 @@ function openTaskViewModal(task) {
         document.getElementById('view-task-due').textContent = 'No Date';
     }
 
-    viewModal.classList.add('active');
+    viewModal.classList.add('open');
 }
 
 document.getElementById('view-modal-close-btn').addEventListener('click', () => {
-    viewModal.classList.remove('active');
+    viewModal.classList.remove('open');
     currentViewTask = null;
 });
 
+viewModal.addEventListener('click', (e) => {
+    if (e.target === viewModal) {
+        viewModal.classList.remove('open');
+        currentViewTask = null;
+    }
+});
+
 document.getElementById('view-modal-edit-btn').addEventListener('click', () => {
-    viewModal.classList.remove('active');
+    viewModal.classList.remove('open');
     if (currentViewTask) {
         openTaskDialog(currentViewTask);
     }
