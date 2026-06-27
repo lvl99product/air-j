@@ -1220,7 +1220,11 @@ function createTaskCardDOM(task) {
     const card = document.createElement('div');
     card.className = `task-card priority-${task.priority.toLowerCase()}`;
     card.id = `task-id-${task.id}`;
-    card.setAttribute('draggable', 'true');
+    
+    // Disable native HTML5 drag on mobile to prevent touch events from being swallowed
+    if (window.innerWidth >= 768) {
+        card.setAttribute('draggable', 'true');
+    }
 
     // Due Date Visual Treatment
     let dueDateHTML = '';
@@ -1309,7 +1313,7 @@ function createTaskCardDOM(task) {
                 </button>
             </div>
         </div>
-        <div class="task-card-body card-edit-trigger">
+        <div class="task-card-body">
             <h4 class="task-title">${escapeHTML(task.title)}</h4>
             ${task.description ? `<p class="task-desc">${escapeHTML(task.description)}</p>` : ''}
         </div>
@@ -1335,7 +1339,7 @@ function createTaskCardDOM(task) {
     });
 
     // 2. Open Edit Overlay (changed to View Overlay)
-    card.querySelector('.card-edit-trigger').addEventListener('click', () => {
+    card.addEventListener('click', () => {
         openTaskViewModal(task);
     });
 
