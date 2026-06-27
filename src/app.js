@@ -22,6 +22,12 @@ let isLightTheme = false;
 let userName = "User";
 let workspaceName = "Workspace";
 
+// --- Onboarding State ---
+let isFirstVisit = false;
+let onboardingComplete = false;
+let cyclesOnboardingComplete = false;
+let onboardingTourActive = false;
+
 // --- Dynamic Profile Greeting ---
 function updateWelcomeGreeting() {
     const welcomeHeader = document.getElementById('welcome-message-header');
@@ -148,12 +154,22 @@ function loadAppData() {
             saveTasks();
         }
     } else {
-        tasks = [...DEFAULT_TASKS];
-        tasks.forEach(t => {
-            t.mode = 'kanban';
-            t.sprintId = null;
-        });
-        saveTasks();
+        // First visit: check if onboarding has been completed before
+        const onboardingFlag = safeStorage.get('airj-onboarding-complete');
+        if (!onboardingFlag) {
+            // True first visit — start with empty board for genuine onboarding
+            isFirstVisit = true;
+            tasks = [];
+            saveTasks();
+        } else {
+            // Onboarding was completed/skipped before but tasks were cleared
+            tasks = [...DEFAULT_TASKS];
+            tasks.forEach(t => {
+                t.mode = 'kanban';
+                t.sprintId = null;
+            });
+            saveTasks();
+        }
     }
 
     // 3. Load Categories
@@ -202,6 +218,11 @@ function loadAppData() {
     userName = safeStorage.get('airj-username') || "User";
     workspaceName = safeStorage.get('airj-workspace') || "Workspace";
     updateProfileUI();
+
+    // 9. Load Onboarding State
+    const onboardingFlag = safeStorage.get('airj-onboarding-complete');
+    onboardingComplete = !!onboardingFlag;
+    cyclesOnboardingComplete = onboardingFlag === 'all';
 }
 
 function savePersonalization() {
@@ -321,6 +342,11 @@ function switchMode(mode) {
     // Re-render UI
     renderAppUI();
     showToastNotification(`Switched to ${mode === 'scrum' ? 'Cycles' : 'Flow'} mode.`);
+
+    // Trigger Cycles onboarding on first switch to scrum
+    if (mode === 'scrum' && !cyclesOnboardingComplete && !onboardingTourActive) {
+        setTimeout(() => initCyclesOnboarding(), 600);
+    }
 }
 
 // --- Dynamic UI Rendering Engine ---
@@ -1308,9 +1334,9 @@ function createTaskCardDOM(task) {
         card.classList.remove('dragging');
     });
 
-    // 2. Open Edit Overlay
+    // 2. Open Edit Overlay (changed to View Overlay)
     card.querySelector('.card-edit-trigger').addEventListener('click', () => {
-        openTaskDialog(task);
+        openTaskViewModal(task);
     });
 
     // 3. Delete Action Hook
@@ -1554,6 +1580,58 @@ function deleteTask(id) {
 }
 
 // --- Responsive Creator Dialog Handler ---
+// ========== TASK VIEW MODAL LOGIC ==========
+let currentViewTask = null;
+const viewModal = document.getElementById('task-view-modal');
+
+function openTaskViewModal(task) {
+    currentViewTask = task;
+    document.getElementById('view-task-title').textContent = task.title;
+    document.getElementById('view-task-category').textContent = task.category;
+    document.getElementById('view-task-priority').textContent = task.priority;
+    
+    // Set category badge color
+    const catBadge = document.getElementById('view-task-category');
+    catBadge.style.color = getCategoryColor(task.category);
+    catBadge.style.backgroundColor = `${getCategoryColor(task.category)}20`;
+
+    const descEl = document.getElementById('view-task-desc');
+    if (task.description) {
+        descEl.textContent = task.description;
+        descEl.style.display = 'block';
+    } else {
+        descEl.style.display = 'none';
+    }
+
+    // Status format
+    let statusText = 'To Do';
+    if (task.status === 'doing') statusText = 'Doing';
+    if (task.status === 'done') statusText = 'Done';
+    document.getElementById('view-task-status').textContent = statusText;
+
+    // Due date format
+    if (task.dueDate) {
+        const dueObj = new Date(task.dueDate + 'T23:59:59');
+        document.getElementById('view-task-due').textContent = dueObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } else {
+        document.getElementById('view-task-due').textContent = 'No Date';
+    }
+
+    viewModal.classList.add('active');
+}
+
+document.getElementById('view-modal-close-btn').addEventListener('click', () => {
+    viewModal.classList.remove('active');
+    currentViewTask = null;
+});
+
+document.getElementById('view-modal-edit-btn').addEventListener('click', () => {
+    viewModal.classList.remove('active');
+    if (currentViewTask) {
+        openTaskDialog(currentViewTask);
+    }
+});
+
 function openTaskDialog(task = null) {
     populateCategoryDropdowns();
     const modal = document.getElementById('task-modal');
@@ -2556,6 +2634,10 @@ window.addEventListener('DOMContentLoaded', () => {
     // 5. Sprint Expiry Checks
     checkSprintExpiry();
     setInterval(checkSprintExpiry, 60000); // Check every minute
+
+    // 6. Onboarding Tour (first visit)
+    initOnboarding();
+    setupReplayTourListener();
 });
 
 // --- Utilities ---
@@ -2765,4 +2847,579 @@ function importData(file, strategy) {
         }
     };
     reader.readAsText(file);
+}
+
+/* ==========================================================================
+   ONBOARDING TOUR SYSTEM
+   ========================================================================== */
+
+// --- Flow Tour Step Definitions ---
+function getFlowTourSteps() {
+    const isMobile = window.innerWidth < 768;
+    const steps = [
+        {
+            id: 'welcome',
+            target: null,
+            placement: 'center',
+            title: 'Welcome to air-J \u{1F44B}',
+            body: 'Your personal task manager for tracking daily work. Let\'s take a quick tour of the key features — it only takes a minute.',
+            centerCard: true
+        },
+        {
+            id: 'mode-toggle',
+            target: '#header-mode-toggle',
+            placement: 'bottom',
+            title: 'Flow & Cycles',
+            body: 'Switch between <strong>Flow</strong> (Kanban) for daily tasks and <strong>Cycles</strong> (Sprints) for time-boxed work. You\'re in Flow mode right now.'
+        },
+        {
+            id: 'categories',
+            target: isMobile ? '#mobile-category-filters' : '#category-filter-list',
+            placement: isMobile ? 'bottom' : 'right',
+            title: 'Project Categories',
+            body: 'Organise tasks by project. Filter your board to focus on what matters. You can create custom categories too.'
+        },
+        {
+            id: 'columns',
+            target: isMobile ? '#column-segmented-control' : '#column-todo',
+            placement: 'bottom',
+            title: 'Your Task Columns',
+            body: 'Tasks flow through three stages: <strong>To Do</strong> \u2192 <strong>Doing</strong> \u2192 <strong>Done</strong>. Drag tasks between columns or use the quick-shift arrows to track progress.'
+        }
+    ];
+
+    // Desktop-only column detail steps
+    if (!isMobile) {
+        steps.push({
+            id: 'doing-col',
+            target: '#column-doing',
+            placement: 'bottom',
+            title: 'Work In Progress',
+            body: 'Tasks you\'re actively working on live here. The dashboard tracks your active count at a glance.'
+        });
+        steps.push({
+            id: 'done-col',
+            target: '#column-done',
+            placement: 'bottom',
+            title: 'Completed Work',
+            body: 'Finished tasks land here. Your progress ring on the sidebar tracks your completion rate.'
+        });
+    }
+
+    steps.push({
+        id: 'create-prompt',
+        target: isMobile ? '#global-add-task-fab' : '#header-add-task-btn',
+        placement: isMobile ? 'top' : 'bottom',
+        title: 'Create Your First Task \u2728',
+        body: 'Let\'s add your first task! Click the button below to open the task form.',
+        type: 'action',
+        actionTarget: isMobile ? '#global-add-task-fab' : '#header-add-task-btn'
+    });
+
+    steps.push({
+        id: 'fill-task',
+        target: null,
+        placement: 'bottom-right',
+        title: 'Fill In Your Task',
+        body: 'Give it a title, pick a category and priority, then hit <strong>Save Task</strong>. We\'ll wait right here!',
+        type: 'interactive',
+        waitFor: 'task-submit'
+    });
+
+    steps.push({
+        id: 'complete',
+        target: null,
+        placement: 'center',
+        title: 'You\'re All Set! \u{1F389}',
+        body: 'Your first task is on the board! Drag it between columns as you work. Try switching to <strong>Cycles</strong> mode when you\'re ready for sprint-based workflows.',
+        centerCard: true,
+        isFinal: true
+    });
+
+    return steps;
+}
+
+// --- Cycles Tour Step Definitions ---
+function getCyclesTourSteps() {
+    return [
+        {
+            id: 'cycles-welcome',
+            target: '#header-mode-toggle',
+            placement: 'bottom',
+            title: 'Welcome to Cycles \u{1F504}',
+            body: 'Cycles mode lets you plan work into time-boxed <strong>sprints</strong>. Let\'s see how it works.'
+        },
+        {
+            id: 'backlog',
+            target: '#backlog-column',
+            placement: 'right',
+            title: 'Your Backlog',
+            body: 'All unplanned tasks live here. Add tasks to your backlog, then commit them to a sprint.'
+        },
+        {
+            id: 'sprint-planning',
+            target: '#sprint-planning-placeholder',
+            placement: 'bottom',
+            title: 'Sprint Planning',
+            body: 'Stage tasks from the backlog into a sprint, pick a duration (1\u20134 weeks), and start the clock.'
+        },
+        {
+            id: 'sprint-board',
+            target: '.kanban-board',
+            placement: 'bottom',
+            title: 'Sprint Board',
+            body: 'During an active sprint, tasks flow through <strong>To Do</strong> \u2192 <strong>Doing</strong> \u2192 <strong>Done</strong> — scoped to your sprint commitment.'
+        },
+        {
+            id: 'sprint-lifecycle',
+            target: '#sprint-end-btn',
+            placement: 'top',
+            title: 'Sprint Lifecycle',
+            body: 'When the sprint ends, you\'ll get a review summary. Completed tasks are celebrated, and unfinished items return to the backlog.',
+            isFinal: true
+        }
+    ];
+}
+
+// --- Onboarding Initialization ---
+function initOnboarding() {
+    if (!isFirstVisit || onboardingComplete) return;
+    // Delay to let CSS animations settle and initial render complete
+    setTimeout(() => {
+        startOnboardingTour(getFlowTourSteps(), 'flow');
+    }, 900);
+}
+
+function initCyclesOnboarding() {
+    if (cyclesOnboardingComplete || onboardingTourActive) return;
+    startOnboardingTour(getCyclesTourSteps(), 'cycles');
+}
+
+function setupReplayTourListener() {
+    const replayBtn = document.getElementById('replay-tour-btn');
+    if (replayBtn) {
+        replayBtn.addEventListener('click', () => {
+            // Close profile dropdown
+            const dropdown = document.getElementById('profile-dropdown');
+            if (dropdown) dropdown.classList.remove('active');
+
+            // Determine which tour to replay based on current mode
+            if (currentMode === 'scrum') {
+                startOnboardingTour(getCyclesTourSteps(), 'replay');
+            } else {
+                startOnboardingTour(getFlowTourSteps(), 'replay');
+            }
+        });
+    }
+}
+
+// --- Core Tour Engine ---
+function startOnboardingTour(steps, tourType) {
+    if (onboardingTourActive) return;
+    onboardingTourActive = true;
+
+    let currentStep = 0;
+    let overlayEl = null;
+    let tooltipEl = null;
+    let previousTarget = null;
+    let taskSubmitWatcher = null;
+
+    // Create overlay
+    overlayEl = document.createElement('div');
+    overlayEl.className = 'onboarding-overlay fade-enter';
+    document.body.appendChild(overlayEl);
+
+    // Create tooltip
+    tooltipEl = document.createElement('div');
+    tooltipEl.className = 'onboarding-tooltip';
+    tooltipEl.innerHTML = `
+        <div class="onboarding-tooltip-arrow"></div>
+        <div class="onboarding-step-counter"></div>
+        <div class="onboarding-title"></div>
+        <div class="onboarding-body"></div>
+        <div class="onboarding-actions">
+            <button class="onboarding-btn-skip" data-action="skip">Skip tour</button>
+            <div class="onboarding-actions-right">
+                <button class="onboarding-btn-back" data-action="back">Back</button>
+                <button class="onboarding-btn-next" data-action="next">Next</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(tooltipEl);
+
+    // Trigger overlay fade-in
+    requestAnimationFrame(() => {
+        overlayEl.classList.remove('fade-enter');
+        overlayEl.classList.add('fade-active');
+    });
+
+    // Event delegation for buttons
+    tooltipEl.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        if (!action) return;
+
+        if (action === 'next') {
+            const step = steps[currentStep];
+            if (step.type === 'action') {
+                // Click the action target to open the modal, then advance
+                const actionBtn = document.querySelector(step.actionTarget);
+                if (actionBtn) actionBtn.click();
+                // Short delay for modal to open
+                setTimeout(() => advanceStep(1), 350);
+            } else {
+                advanceStep(1);
+            }
+        } else if (action === 'back') {
+            advanceStep(-1);
+        } else if (action === 'skip') {
+            completeTour();
+        }
+    });
+
+    // Prevent overlay click from closing (but allow target interaction)
+    overlayEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    function advanceStep(direction) {
+        const nextIndex = currentStep + direction;
+        if (nextIndex >= steps.length) {
+            completeTour();
+            return;
+        }
+        if (nextIndex < 0) return;
+
+        // Hide tooltip during transition
+        tooltipEl.classList.remove('visible');
+
+        setTimeout(() => {
+            currentStep = nextIndex;
+            showStep(currentStep);
+        }, 200);
+    }
+
+    function showStep(index) {
+        const step = steps[index];
+        if (!step) return;
+
+        // Clean up previous target highlight
+        if (previousTarget) {
+            previousTarget.classList.remove('onboarding-target-highlight');
+            previousTarget = null;
+        }
+
+        // Remove interactive watcher if present
+        if (taskSubmitWatcher) {
+            document.removeEventListener('submit', taskSubmitWatcher, true);
+            taskSubmitWatcher = null;
+        }
+
+        // Reset task modal z-index from any previous interactive step
+        const taskModal = document.getElementById('task-modal');
+        if (taskModal) taskModal.style.zIndex = '';
+
+        // Update step counter with dots
+        const counterEl = tooltipEl.querySelector('.onboarding-step-counter');
+        let dotsHtml = '<div class="onboarding-step-dots">';
+        for (let i = 0; i < steps.length; i++) {
+            const cls = i < index ? 'completed' : (i === index ? 'active' : '');
+            dotsHtml += `<span class="onboarding-step-dot ${cls}"></span>`;
+        }
+        dotsHtml += '</div>';
+        counterEl.innerHTML = `Step ${index + 1} of ${steps.length} ${dotsHtml}`;
+
+        // Update content
+        tooltipEl.querySelector('.onboarding-title').textContent = step.title;
+        tooltipEl.querySelector('.onboarding-body').innerHTML = step.body;
+
+        // Reset arrow display (may have been hidden by center-card step)
+        const arrowEl = tooltipEl.querySelector('.onboarding-tooltip-arrow');
+        if (arrowEl) arrowEl.style.display = '';
+
+        // Update buttons
+        const backBtn = tooltipEl.querySelector('[data-action="back"]');
+        const nextBtn = tooltipEl.querySelector('[data-action="next"]');
+        const skipBtn = tooltipEl.querySelector('[data-action="skip"]');
+
+        backBtn.style.display = index === 0 ? 'none' : '';
+        skipBtn.style.display = step.isFinal ? 'none' : '';
+
+        if (step.isFinal) {
+            nextBtn.textContent = 'Finish';
+            nextBtn.dataset.action = 'skip'; // Finish = complete tour
+            nextBtn.style.display = '';
+        } else if (step.type === 'action') {
+            nextBtn.textContent = 'Open Task Form';
+            nextBtn.dataset.action = 'next';
+            nextBtn.style.display = '';
+        } else if (step.type === 'interactive') {
+            nextBtn.style.display = 'none'; // Hidden during interactive step
+            nextBtn.dataset.action = 'next';
+            // Promote task modal above overlay so user can interact with it
+            if (taskModal) taskModal.style.zIndex = '9999';
+            setupInteractiveStep(step);
+        } else {
+            nextBtn.textContent = 'Next';
+            nextBtn.dataset.action = 'next';
+            nextBtn.style.display = '';
+        }
+
+        // Center card vs positioned
+        tooltipEl.classList.toggle('center-card', !!step.centerCard);
+
+        // Find and highlight target
+        const targetEl = step.target ? document.querySelector(step.target) : null;
+
+        if (targetEl) {
+            // Scroll target into view
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            // Apply highlight
+            targetEl.classList.add('onboarding-target-highlight');
+            previousTarget = targetEl;
+
+            // Position spotlight overlay clip-path
+            setTimeout(() => {
+                updateSpotlight(targetEl);
+                positionTooltip(targetEl, tooltipEl, step.placement);
+                tooltipEl.classList.add('visible');
+            }, 150);
+        } else {
+            // Center placement (no target)
+            clearSpotlight();
+            positionNoTarget(tooltipEl, step.placement);
+            tooltipEl.classList.add('visible');
+        }
+    }
+
+    function setupInteractiveStep(step) {
+        if (step.waitFor === 'task-submit') {
+            // Pre-fill the task form with suggested content
+            setTimeout(() => {
+                const titleInput = document.getElementById('form-task-title');
+                if (titleInput && !titleInput.value) {
+                    titleInput.value = 'Take the rubbish out';
+                    titleInput.focus();
+                }
+            }, 400);
+
+            // Watch for task form submission to advance
+            taskSubmitWatcher = function(e) {
+                const form = document.getElementById('task-creation-form');
+                if (e.target === form) {
+                    document.removeEventListener('submit', taskSubmitWatcher, true);
+                    taskSubmitWatcher = null;
+
+                    // Wait for render, then advance to final step
+                    setTimeout(() => {
+                        advanceStep(1);
+                    }, 500);
+                }
+            };
+            document.addEventListener('submit', taskSubmitWatcher, true);
+        }
+    }
+
+    function updateSpotlight(targetEl) {
+        const rect = targetEl.getBoundingClientRect();
+        const padding = 8;
+        const x = rect.left - padding;
+        const y = rect.top - padding;
+        const w = rect.width + padding * 2;
+        const h = rect.height + padding * 2;
+        const r = 10; // border radius for cutout
+
+        // Create an SVG-style clip-path with rounded rect cutout using polygon evenodd
+        // We use an inset-based approach with a CSS mask instead for simplicity
+        overlayEl.style.clipPath = `polygon(
+            evenodd,
+            0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%,
+            ${x}px ${y + r}px,
+            ${x + r}px ${y}px,
+            ${x + w - r}px ${y}px,
+            ${x + w}px ${y + r}px,
+            ${x + w}px ${y + h - r}px,
+            ${x + w - r}px ${y + h}px,
+            ${x + r}px ${y + h}px,
+            ${x}px ${y + h - r}px,
+            ${x}px ${y + r}px
+        )`;
+    }
+
+    function clearSpotlight() {
+        overlayEl.style.clipPath = '';
+    }
+
+    function positionTooltip(targetEl, tooltip, placement) {
+        const rect = targetEl.getBoundingClientRect();
+        const gap = 16;
+        const isMobile = window.innerWidth < 768;
+
+        // Remove old placement classes
+        tooltip.classList.remove('placement-top', 'placement-bottom', 'placement-left', 'placement-right');
+
+        // On mobile, force top or bottom only
+        if (isMobile) {
+            placement = (rect.top > window.innerHeight / 2) ? 'top' : 'bottom';
+        }
+
+        let top, left;
+        const tooltipRect = tooltip.getBoundingClientRect();
+
+        switch (placement) {
+            case 'bottom':
+                top = rect.bottom + gap;
+                left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+                tooltip.classList.add('placement-bottom');
+                tooltip.setAttribute('data-arrow', 'top');
+                break;
+            case 'top':
+                top = rect.top - tooltipRect.height - gap;
+                left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+                tooltip.classList.add('placement-top');
+                tooltip.setAttribute('data-arrow', 'bottom');
+                break;
+            case 'left':
+                top = rect.top + rect.height / 2 - tooltipRect.height / 2;
+                left = rect.left - tooltipRect.width - gap;
+                tooltip.classList.add('placement-left');
+                tooltip.setAttribute('data-arrow', 'right');
+                break;
+            case 'right':
+                top = rect.top + rect.height / 2 - tooltipRect.height / 2;
+                left = rect.right + gap;
+                tooltip.classList.add('placement-right');
+                tooltip.setAttribute('data-arrow', 'left');
+                break;
+            default:
+                positionNoTarget(tooltip, placement);
+                return;
+        }
+
+        // Clamp to viewport
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        if (!isMobile) {
+            left = Math.max(12, Math.min(left, vw - tooltipRect.width - 12));
+        }
+        top = Math.max(12, Math.min(top, vh - tooltipRect.height - 12));
+
+        tooltip.style.top = `${top}px`;
+        if (!isMobile) {
+            tooltip.style.left = `${left}px`;
+        }
+
+        // Update arrow position to point at target center
+        const arrowEl = tooltip.querySelector('.onboarding-tooltip-arrow');
+        if (arrowEl) {
+            // Reset any previous inline styles
+            arrowEl.style.left = '';
+            arrowEl.style.top = '';
+            arrowEl.style.marginLeft = '';
+            arrowEl.style.marginTop = '';
+
+            if (placement === 'top' || placement === 'bottom') {
+                const targetCenter = rect.left + rect.width / 2;
+                const tooltipLeft = isMobile ? 16 : left;
+                const arrowOffset = Math.max(20, Math.min(targetCenter - tooltipLeft, (isMobile ? vw - 32 : tooltipRect.width) - 20));
+                arrowEl.style.left = `${arrowOffset}px`;
+                arrowEl.style.marginLeft = '0';
+            } else if (placement === 'left' || placement === 'right') {
+                const targetCenter = rect.top + rect.height / 2;
+                const tooltipTop = top;
+                const arrowOffset = Math.max(20, Math.min(targetCenter - tooltipTop, tooltipRect.height - 20));
+                arrowEl.style.top = `${arrowOffset}px`;
+                arrowEl.style.marginTop = '0';
+            }
+        }
+    }
+
+    function positionNoTarget(tooltip, placement) {
+        tooltip.classList.remove('placement-top', 'placement-bottom', 'placement-left', 'placement-right');
+        tooltip.removeAttribute('data-arrow');
+        tooltip.querySelector('.onboarding-tooltip-arrow').style.display = 'none';
+
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const isMobile = window.innerWidth < 768;
+        
+        if (placement === 'bottom-right') {
+            tooltip.style.top = `${window.innerHeight - tooltipRect.height - 24}px`;
+            if (isMobile) {
+                tooltip.style.left = '16px';
+            } else {
+                tooltip.style.left = `${window.innerWidth - tooltipRect.width - 24}px`;
+            }
+        } else {
+            // center
+            tooltip.style.top = `${(window.innerHeight - tooltipRect.height) / 2}px`;
+            if (!isMobile) {
+                tooltip.style.left = `${(window.innerWidth - tooltipRect.width) / 2}px`;
+            }
+        }
+    }
+
+    function completeTour() {
+        onboardingTourActive = false;
+
+        // Clean up highlight
+        if (previousTarget) {
+            previousTarget.classList.remove('onboarding-target-highlight');
+        }
+
+        // Remove interactive watcher
+        if (taskSubmitWatcher) {
+            document.removeEventListener('submit', taskSubmitWatcher, true);
+        }
+
+        // Reset task modal z-index in case tour was skipped during interactive step
+        const taskModal = document.getElementById('task-modal');
+        if (taskModal) taskModal.style.zIndex = '';
+
+        // Fade out and remove
+        if (tooltipEl) {
+            tooltipEl.classList.remove('visible');
+        }
+        if (overlayEl) {
+            overlayEl.classList.remove('fade-active');
+            overlayEl.classList.add('fade-enter');
+        }
+
+        setTimeout(() => {
+            if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
+            if (tooltipEl && tooltipEl.parentNode) tooltipEl.parentNode.removeChild(tooltipEl);
+            overlayEl = null;
+            tooltipEl = null;
+        }, 400);
+
+        // Persist completion (skip for replays)
+        if (tourType === 'flow') {
+            onboardingComplete = true;
+            safeStorage.set('airj-onboarding-complete', 'flow');
+        } else if (tourType === 'cycles') {
+            cyclesOnboardingComplete = true;
+            safeStorage.set('airj-onboarding-complete', 'all');
+        }
+        // 'replay' type doesn't change flags
+    }
+
+    // Start the tour
+    showStep(0);
+
+    // Update spotlight on resize/scroll
+    const resizeHandler = () => {
+        if (previousTarget && overlayEl) {
+            updateSpotlight(previousTarget);
+            positionTooltip(previousTarget, tooltipEl, steps[currentStep].placement);
+        }
+    };
+    window.addEventListener('resize', resizeHandler);
+    window.addEventListener('scroll', resizeHandler, true);
+
+    // Store cleanup ref for teardown
+    const originalCompleteTour = completeTour;
+    completeTour = function() {
+        window.removeEventListener('resize', resizeHandler);
+        window.removeEventListener('scroll', resizeHandler, true);
+        originalCompleteTour();
+    };
 }

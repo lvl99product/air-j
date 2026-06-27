@@ -733,7 +733,7 @@ body {
     background-color: var(--bg-color);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -843,17 +843,17 @@ body {
 }
 
 .task-title {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     line-height: 1.4;
     color: var(--text-main);
     word-break: break-word;
 }
 
 .task-desc {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
-    line-height: 1.5;
+    line-height: 1.6;
     word-break: break-word;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -900,8 +900,8 @@ body {
 }
 
 .quick-shift-btn {
-    width: 24px;
-    height: 24px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background-color: var(--surface-color);
     border: 1px solid var(--border-color);
@@ -919,9 +919,20 @@ body {
     background-color: var(--surface-hover);
 }
 
+.quick-shift-btn.next {
+    background-color: rgba(13, 148, 136, 0.1);
+    color: var(--primary);
+    border-color: rgba(13, 148, 136, 0.2);
+}
+
+.quick-shift-btn.next:hover {
+    background-color: var(--primary);
+    color: var(--btn-text);
+}
+
 .quick-shift-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 18px;
+    height: 18px;
 }
 
 /* Empty State Card */
@@ -2367,11 +2378,14 @@ body:not(.mode-scrum) .scrum-only-flex {
 
 @media (max-width: 767px) {
     .mode-toggle-wrapper {
-        width: 140px;
-        height: 30px;
+        width: 160px;
+        height: 34px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
     }
     .mode-toggle-btn {
-        font-size: 11px;
+        font-size: 13px;
     }
     .profile-dropdown {
         right: -12px;
@@ -2961,5 +2975,417 @@ body.sprint-planning .sprint-planning-placeholder {
         grid-column: 1 / span 2;
         grid-row: 2;
         width: 100%;
+    }
+}
+
+/* ========== TASK VIEW MODAL ========== */
+
+.task-view-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 10px 0;
+}
+
+.task-view-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.3;
+}
+
+.task-view-desc {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    background: var(--surface-color);
+    padding: 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    white-space: pre-wrap;
+}
+
+.task-view-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+    margin-top: 8px;
+}
+
+.task-view-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-view-meta-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.task-view-meta-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ==========================================================================
+   ONBOARDING TOUR SYSTEM
+   ========================================================================== */
+
+/* --- Spotlight Overlay --- */
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(8, 16, 23, 0.82);
+    transition: opacity 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+                clip-path 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: auto;
+}
+
+body.light-theme .onboarding-overlay {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.onboarding-overlay.fade-enter {
+    opacity: 0;
+}
+
+.onboarding-overlay.fade-active {
+    opacity: 1;
+}
+
+/* --- Target Highlight Ring --- */
+.onboarding-target-highlight {
+    position: relative;
+    z-index: 9999 !important;
+    box-shadow: 0 0 0 4px var(--accent),
+                0 0 24px rgba(45, 212, 191, 0.25),
+                0 0 48px rgba(45, 212, 191, 0.1);
+    border-radius: var(--radius-sm);
+    animation: onboarding-pulse 2s ease-in-out infinite;
+}
+
+body.light-theme .onboarding-target-highlight {
+    box-shadow: 0 0 0 4px var(--accent),
+                0 0 24px rgba(13, 148, 136, 0.2),
+                0 0 48px rgba(13, 148, 136, 0.08);
+}
+
+@keyframes onboarding-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 4px var(--accent),
+                    0 0 24px rgba(45, 212, 191, 0.25),
+                    0 0 48px rgba(45, 212, 191, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 0 6px var(--accent),
+                    0 0 32px rgba(45, 212, 191, 0.35),
+                    0 0 56px rgba(45, 212, 191, 0.15);
+    }
+}
+
+/* --- Tooltip Card --- */
+.onboarding-tooltip {
+    position: fixed;
+    z-index: 10000;
+    max-width: 370px;
+    width: max-content;
+    background: var(--surface-color);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 22px 24px 18px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+                0 0 1px rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+                transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: auto;
+}
+
+body.light-theme .onboarding-tooltip {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12),
+                0 0 0 1px rgba(13, 148, 136, 0.08);
+    border: 1px solid var(--border-color);
+}
+
+.onboarding-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Tooltip placement transforms for entry */
+.onboarding-tooltip.placement-top {
+    transform: translateY(-10px);
+}
+.onboarding-tooltip.placement-top.visible {
+    transform: translateY(0);
+}
+.onboarding-tooltip.placement-left {
+    transform: translateX(-10px);
+}
+.onboarding-tooltip.placement-left.visible {
+    transform: translateX(0);
+}
+.onboarding-tooltip.placement-right {
+    transform: translateX(10px);
+}
+.onboarding-tooltip.placement-right.visible {
+    transform: translateX(0);
+}
+
+/* --- Tooltip Arrow --- */
+.onboarding-tooltip-arrow {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--surface-color);
+    border: 1px solid var(--glass-border);
+    transform: rotate(45deg);
+}
+
+body.light-theme .onboarding-tooltip-arrow {
+    border-color: var(--border-color);
+}
+
+/* Arrow positions */
+.onboarding-tooltip[data-arrow="top"] .onboarding-tooltip-arrow {
+    top: -7px;
+    left: 50%;
+    margin-left: -6px;
+    border-bottom: none;
+    border-right: none;
+}
+
+.onboarding-tooltip[data-arrow="bottom"] .onboarding-tooltip-arrow {
+    bottom: -7px;
+    left: 50%;
+    margin-left: -6px;
+    border-top: none;
+    border-left: none;
+}
+
+.onboarding-tooltip[data-arrow="left"] .onboarding-tooltip-arrow {
+    left: -7px;
+    top: 50%;
+    margin-top: -6px;
+    border-top: none;
+    border-right: none;
+}
+
+.onboarding-tooltip[data-arrow="right"] .onboarding-tooltip-arrow {
+    right: -7px;
+    top: 50%;
+    margin-top: -6px;
+    border-bottom: none;
+    border-left: none;
+}
+
+/* --- Tooltip Content --- */
+.onboarding-title {
+    font-family: var(--font-heading);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.onboarding-body {
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 16px;
+}
+
+.onboarding-body strong {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* --- Step Counter --- */
+.onboarding-step-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin-bottom: 12px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.onboarding-step-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.onboarding-step-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-color);
+    transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.onboarding-step-dot.active {
+    background: var(--accent);
+    transform: scale(1.25);
+}
+
+.onboarding-step-dot.completed {
+    background: var(--primary);
+}
+
+/* --- Tooltip Action Buttons --- */
+.onboarding-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color);
+}
+
+.onboarding-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.onboarding-btn-next {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border: none;
+    border-radius: var(--radius-xs);
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: var(--btn-text);
+    cursor: pointer;
+    transition: var(--transition-snappy);
+    white-space: nowrap;
+}
+
+.onboarding-btn-next:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(45, 212, 191, 0.3);
+}
+
+.onboarding-btn-back {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition-snappy);
+    white-space: nowrap;
+}
+
+.onboarding-btn-back:hover {
+    background: var(--surface-hover);
+    color: var(--text-main);
+}
+
+.onboarding-btn-skip {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 4px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: var(--transition-snappy);
+    white-space: nowrap;
+}
+
+.onboarding-btn-skip:hover {
+    opacity: 1;
+    color: var(--text-main);
+}
+
+/* --- Welcome Splash (Step 1 center card) --- */
+.onboarding-tooltip.center-card {
+    max-width: 420px;
+    text-align: center;
+    padding: 32px 36px 24px;
+}
+
+.onboarding-tooltip.center-card .onboarding-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.onboarding-tooltip.center-card .onboarding-body {
+    font-size: 14px;
+}
+
+.onboarding-tooltip.center-card .onboarding-actions {
+    justify-content: center;
+}
+
+.onboarding-tooltip.center-card .onboarding-step-counter {
+    justify-content: center;
+}
+
+/* --- Responsive Mobile --- */
+@media (max-width: 768px) {
+    .onboarding-tooltip {
+        max-width: calc(100vw - 32px);
+        width: calc(100vw - 32px);
+        left: 16px !important;
+        padding: 18px 20px 14px;
+    }
+
+    .onboarding-tooltip.center-card {
+        max-width: calc(100vw - 32px);
+        width: calc(100vw - 32px);
+        padding: 24px 20px 18px;
+    }
+
+    .onboarding-tooltip.center-card .onboarding-title {
+        font-size: 19px;
+    }
+
+    .onboarding-title {
+        font-size: 15px;
+    }
+
+    .onboarding-body {
+        font-size: 13px;
+    }
+
+    .onboarding-tooltip-arrow {
+        display: none;
+    }
+
+    .onboarding-btn-next {
+        padding: 10px 20px;
+    }
+
+    .onboarding-btn-back {
+        padding: 10px 16px;
     }
 }

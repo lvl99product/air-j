@@ -79,6 +79,15 @@
                         </span>
                         <span class="item-label">Data & Sync</span>
                     </button>
+                    <button class="profile-dropdown-item" id="replay-tour-btn" title="Replay onboarding tour">
+                        <span class="item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                        </span>
+                        <span class="item-label">Replay Tour</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -444,6 +453,49 @@
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
         </button>
+    </div>
+
+    <!-- Responsive Dialog Overlay: Slides up on mobile, scales centered on desktop -->
+    <div class="modal-overlay" id="task-view-modal">
+        <div class="modal-card">
+            <!-- Drag handle visually shown on mobile views -->
+            <div class="drag-handle" id="view-modal-drag-handle"></div>
+            
+            <div class="modal-header">
+                <h3>Task Details</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-secondary" id="view-modal-edit-btn" style="padding: 6px 14px; font-size: 13px;">Edit</button>
+                    <button class="sheet-close-btn" id="view-modal-close-btn" aria-label="Close dialog">✕</button>
+                </div>
+            </div>
+            
+            <div class="modal-body" style="padding-top: 0;">
+                <div class="task-view-details">
+                    <div>
+                        <h2 class="task-view-title" id="view-task-title">Task Title</h2>
+                    </div>
+                    <div class="task-tags-row" style="margin-top: -8px;">
+                        <span class="tag-badge" id="view-task-category">Category</span>
+                        <span class="priority-pill" id="view-task-priority">Priority</span>
+                    </div>
+                    
+                    <div class="task-view-desc" id="view-task-desc">
+                        Description goes here
+                    </div>
+                    
+                    <div class="task-view-meta-row">
+                        <div class="task-view-meta-item">
+                            <span class="task-view-meta-label">Status</span>
+                            <span class="task-view-meta-value" id="view-task-status">To Do</span>
+                        </div>
+                        <div class="task-view-meta-item">
+                            <span class="task-view-meta-label">Due Date</span>
+                            <span class="task-view-meta-value" id="view-task-due">No Date</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Responsive Dialog Overlay: Slides up on mobile, scales centered on desktop -->
